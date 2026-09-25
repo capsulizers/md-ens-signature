@@ -50,6 +50,7 @@ jobs:
       - run: deno check
       - run: deno task lit-check
       - run: deno task import-check
+      - run: deno task test
       - run: deno task build
         env:
           MDSIG_BASE: /md-ens-signature/
