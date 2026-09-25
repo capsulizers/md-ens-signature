@@ -19,3 +19,6 @@ js-sys = "0.3"
 md-ens-signature = { path = "../md-ens-signature" }
 # Must match the installed `wasm-bindgen` CLI exactly.
 wasm-bindgen = "=0.2.108"
+
+[dev-dependencies]
+anyhow = "1.0.104"

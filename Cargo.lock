@@ -541,6 +541,7 @@ name = "md-ens-signature-wasm"
 version = "0.1.0"
 dependencies = [
  "alloy-primitives",
+ "anyhow",
  "js-sys",
  "md-ens-signature",
  "wasm-bindgen",
