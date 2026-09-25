@@ -5,10 +5,16 @@
 //! JavaScript `Error` with a generic message.
 
 use alloy_primitives::hex;
-use js_sys::{Object, Reflect};
+use anyhow::{anyhow, bail};
+use js_sys::{Object, Promise, Reflect};
 use md_ens_signature::document::{self, SignatureFields};
+use md_ens_signature::ens::EthCall;
 use md_ens_signature::signature;
+use md_ens_signature::verify::{self, EthCaller, Verdict};
+use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::{JsError, JsValue, wasm_bindgen};
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{Request, RequestInit, Response};
 
 /// Returns the SHA-256 digest of the file's canonical body as `0x` hex.
 #[wasm_bindgen(js_name = bodyDigest)]
@@ -78,4 +84,97 @@ pub fn recover_signer(markdown: &str) -> Result<Option<String>, JsError> {
   let address = signature::recover(&fields.signature, &fields.signer, &digest)
     .map_err(|_| JsError::new("The signature is malformed"))?;
   Ok(Some(address.to_checksum(None)))
+}
+
+/// Verifies the file against ENSv2 on Sepolia, sending `eth_call` to
+/// `rpcUrl` with `fetch`.
+///
+/// Resolves to `{ kind, signer?, address?, reason? }`, where `kind` is
+/// `unsigned`, `tampered`, `unauthorized`, or `verified`. With a
+/// `trustedParent`, only that name and its subnames verify. Rejects with a
+/// generic error when the node cannot be reached or answers badly.
+#[wasm_bindgen(
+  js_name = verify,
+  unchecked_return_type = "{ kind: \"unsigned\" } | { kind: \"tampered\"; signer: string } | { kind: \"unauthorized\"; signer: string; reason: string } | { kind: \"verified\"; signer: string; address: string }"
+)]
+pub async fn verify(
+  markdown: String,
+  #[wasm_bindgen(js_name = trustedParent)] trusted_parent: Option<String>,
+  #[wasm_bindgen(js_name = rpcUrl)] rpc_url: String,
+) -> Result<JsValue, JsError> {
+  let caller = FetchCaller { url: rpc_url };
+  let verdict = verify::verify(&markdown, trusted_parent.as_deref(), &caller)
+    .await
+    .map_err(|_| JsError::new("Could not check the name on Sepolia"))?;
+  let fields: Vec<(&str, String)> = match verdict {
+    Verdict::Unsigned => vec![("kind", "unsigned".to_owned())],
+    Verdict::Tampered { signer } => {
+      vec![("kind", "tampered".to_owned()), ("signer", signer)]
+    }
+    Verdict::Unauthorized { signer, reason } => vec![
+      ("kind", "unauthorized".to_owned()),
+      ("signer", signer),
+      ("reason", reason.to_string()),
+    ],
+    Verdict::Verified { signer, address } => vec![
+      ("kind", "verified".to_owned()),
+      ("signer", signer),
+      ("address", address.to_checksum(None)),
+    ],
+  };
+  let object = Object::new();
+  for (key, value) in fields {
+    Reflect::set(&object, &key.into(), &value.into())
+      .map_err(|_| JsError::new("Failed to build the verdict"))?;
+  }
+  Ok(object.into())
+}
+
+#[wasm_bindgen]
+extern "C" {
+  /// The global `fetch`, present in browsers, workers, and Deno alike.
+  #[wasm_bindgen(js_name = fetch)]
+  fn global_fetch(request: &Request) -> Promise;
+}
+
+/// Sends `eth_call` as JSON-RPC over the global `fetch`.
+struct FetchCaller {
+  url: String,
+}
+
+impl EthCaller for FetchCaller {
+  async fn call(&self, call: &EthCall) -> anyhow::Result<Vec<u8>> {
+    let body = format!(
+      "{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_call\",\"params\":\
+       [{{\"to\":\"{}\",\"data\":\"{}\"}},\"latest\"]}}",
+      call.to,
+      hex::encode_prefixed(&call.data),
+    );
+    let init = RequestInit::new();
+    init.set_method("POST");
+    init.set_body(&body.into());
+    let request = Request::new_with_str_and_init(&self.url, &init)
+      .map_err(|_| anyhow!("Invalid RPC URL"))?;
+    request
+      .headers()
+      .set("content-type", "application/json")
+      .map_err(|_| anyhow!("Failed to set a header"))?;
+    let response: Response = JsFuture::from(global_fetch(&request))
+      .await
+      .map_err(|_| anyhow!("The node is unreachable"))?
+      .dyn_into()
+      .map_err(|_| anyhow!("fetch did not return a Response"))?;
+    if !response.ok() {
+      bail!("The node answered with HTTP {}", response.status());
+    }
+    let json = response.json().map_err(|_| anyhow!("No JSON body"))?;
+    let json = JsFuture::from(json)
+      .await
+      .map_err(|_| anyhow!("The node's answer is not JSON"))?;
+    let result = Reflect::get(&json, &"result".into())
+      .ok()
+      .and_then(|result| result.as_string())
+      .ok_or_else(|| anyhow!("The node's answer has no result"))?;
+    hex::decode(result).map_err(|_| anyhow!("The node's result is not hex"))
+  }
 }
