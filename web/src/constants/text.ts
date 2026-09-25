@@ -3,6 +3,12 @@ export const TEXT = {
   title: "Markdown ENS Signature",
   subtitle:
     "Sign a Markdown file with an ENS name and verify it against ENSv2 permissions on Sepolia.",
+  connectWallet: "Connect wallet",
+  switchToSepolia: "Switch to Sepolia",
+  walletFailed: "The wallet request was cancelled or failed.",
+  noWallet:
+    "No browser wallet found. Verifying still works; signing and managing members need one.",
+  getMetaMask: "Get MetaMask",
   rpcUrlLabel: "Sepolia RPC URL",
   parentNameLabel: "Parent ENS name",
   parentNameHint: "Members are subnames of this name.",

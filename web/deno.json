@@ -85,6 +85,7 @@
     "lit": "npm:lit@^3.2.0",
     "@lit/context": "npm:@lit/context@^1.1.0",
     "@awesome.me/webawesome": "npm:@awesome.me/webawesome@^3.5.0",
-    "bootstrap-icons": "npm:bootstrap-icons@^1.13.1"
+    "bootstrap-icons": "npm:bootstrap-icons@^1.13.1",
+    "viem": "npm:viem@^2.56.8"
   }
 }
