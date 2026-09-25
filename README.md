@@ -38,5 +38,15 @@ sed 's/under 30/under 35/' signed.md > edited.md
 mdsig inspect edited.md
 ```
 
-`inspect` works offline. Checking the recovered address against the signer's
-ENS name on Sepolia comes with `mdsig verify`.
+`inspect` works offline. `verify` also asks ENSv2 on Sepolia who owns the
+signer name and compares that owner with the recovered address:
+
+```sh
+mdsig verify signed.md
+```
+
+The test key owns no `bob.alice.eth` on Sepolia, so this exits with 3,
+unauthorized. A file signed by the owner of a registered name exits with 0,
+and an edited body exits with 4. `--parent alice.eth` accepts only that name
+and its subnames, `--rpc` picks another Sepolia node, and `--json` prints the
+verdict as JSON.
