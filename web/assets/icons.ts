@@ -6,7 +6,7 @@ import { registerIconLibrary } from "@awesome.me/webawesome/dist/components/icon
  * one falls back to the question mark glyph.
  */
 const ICON_SOURCES = import.meta.glob<string>(
-  "../node_modules/bootstrap-icons/icons/{box-arrow-up-right,download,file-earmark,folder2-open,person-check,person-plus,person-x,pen,hourglass-split,patch-check-fill,question-diamond,shield-exclamation,wallet2,x-octagon-fill}.svg",
+  "../node_modules/bootstrap-icons/icons/{box-arrow-up-right,check-circle-fill,circle,download,file-earmark,folder2-open,person-check,person-plus,person-x,pen,hourglass-split,patch-check-fill,question-diamond,shield-exclamation,stars,wallet2,x-octagon-fill}.svg",
   {
     eager: true,
     import: "default",

@@ -2,8 +2,11 @@ import { createContext } from "@lit/context";
 
 import {
   ChainPermissionsEngine,
+  ChainTeamEngine,
   type PermissionsEngine,
+  SepoliaClients,
   type SignatureEngine,
+  type TeamEngine,
   WasmSignatureEngine,
 } from "#engine";
 
@@ -11,6 +14,7 @@ import {
 export interface Engines {
   signature: SignatureEngine;
   permissions: PermissionsEngine;
+  team: TeamEngine;
   /** Bumped after a permission change confirms, so readers check again. */
   revision: number;
   /** Tells every reader that a permission change has confirmed. */
@@ -22,9 +26,11 @@ export const enginesContext = createContext<Engines>(Symbol("engines"));
 
 /** The engines: members come from Sepolia, signatures from WebAssembly. */
 export function createEngines(notifyChanged: () => void): Engines {
+  const clients = new SepoliaClients();
   return {
     signature: new WasmSignatureEngine(),
-    permissions: new ChainPermissionsEngine(),
+    permissions: new ChainPermissionsEngine(clients),
+    team: new ChainTeamEngine(clients),
     revision: 0,
     notifyChanged,
   };

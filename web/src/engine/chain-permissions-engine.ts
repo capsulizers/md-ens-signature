@@ -1,9 +1,7 @@
 import {
   type Address,
-  createPublicClient,
   encodeFunctionData,
   type Hex,
-  http,
   labelhash,
   parseAbi,
   parseAbiItem,
@@ -25,7 +23,8 @@ import type {
   PermissionsEngine,
   Transaction,
 } from "./permissions-engine.ts";
-import { WALLET_CHAIN, walletClient } from "./wallet.ts";
+import type { SepoliaClients } from "./sepolia-clients.ts";
+import { sendFromWallet } from "./wallet.ts";
 
 const UNIVERSAL_RESOLVER_ABI = parseAbi([
   "function findOwner(bytes name) view returns (address)",
@@ -53,10 +52,14 @@ const LABEL_REGISTERED = parseAbiItem(
  * parent's owner can take it back.
  */
 export class ChainPermissionsEngine implements PermissionsEngine {
-  #clients = new Map<string, PublicClient>();
+  #clients: SepoliaClients;
+
+  constructor(clients: SepoliaClients) {
+    this.#clients = clients;
+  }
 
   async members(parentName: string, rpcUrl: string): Promise<Member[]> {
-    const client = this.#client(rpcUrl);
+    const client = this.#clients.get(rpcUrl);
     const registry = await this.#registry(client, parentName);
     if (registry === null) {
       return [];
@@ -77,7 +80,7 @@ export class ChainPermissionsEngine implements PermissionsEngine {
   }
 
   owner(name: string, rpcUrl: string): Promise<Address | null> {
-    return this.#owner(this.#client(rpcUrl), name);
+    return this.#owner(this.#clients.get(rpcUrl), name);
   }
 
   async grant(
@@ -110,12 +113,7 @@ export class ChainPermissionsEngine implements PermissionsEngine {
   }
 
   async confirm(transaction: Transaction, rpcUrl: string): Promise<void> {
-    const receipt = await this.#client(rpcUrl).waitForTransactionReceipt({
-      hash: transaction.hash,
-    });
-    if (receipt.status !== "success") {
-      throw new Error("The transaction reverted.");
-    }
+    await this.#clients.confirm(transaction.hash, rpcUrl);
   }
 
   /** Sends one call to the parent's registry from the wallet's account. */
@@ -124,22 +122,14 @@ export class ChainPermissionsEngine implements PermissionsEngine {
     rpcUrl: string,
     data: Hex,
   ): Promise<Transaction> {
-    const registry = await this.#registry(this.#client(rpcUrl), parentName);
+    const registry = await this.#registry(
+      this.#clients.get(rpcUrl),
+      parentName,
+    );
     if (registry === null) {
       throw new Error("The parent name has no registry.");
     }
-    const wallet = walletClient();
-    const [account] = await wallet.requestAddresses();
-    if (account === undefined) {
-      throw new Error("The wallet returned no account.");
-    }
-    const hash = await wallet.sendTransaction({
-      account,
-      chain: WALLET_CHAIN,
-      to: registry,
-      data,
-    });
-    return { hash };
+    return { hash: await sendFromWallet(registry, data) };
   }
 
   /** The registry that holds the parent's subnames, or null if none. */
@@ -199,19 +189,6 @@ export class ChainPermissionsEngine implements PermissionsEngine {
       toBlock = fromBlock - 1n;
     }
     return [...new Set(chunks.flat())];
-  }
-
-  #client(rpcUrl: string): PublicClient {
-    let client = this.#clients.get(rpcUrl);
-    if (client === undefined) {
-      client = createPublicClient({
-        chain: WALLET_CHAIN,
-        transport: http(rpcUrl),
-        batch: { multicall: true },
-      });
-      this.#clients.set(rpcUrl, client);
-    }
-    return client;
   }
 }
 

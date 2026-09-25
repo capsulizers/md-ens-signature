@@ -62,4 +62,30 @@ export const TEXT = {
   ownedBy: "Owned by",
   noOwner: "No owner; it cannot sign",
   loadFailed: "Could not read the members from Sepolia.",
+  teamTitle: "Create a team name",
+  teamSubtitle:
+    "Register your own .eth name on Sepolia, with its own registry for members. Test USDC pays for it.",
+  teamLabel: "Team name",
+  teamLabelPlaceholder: "myteam",
+  teamCheck: "Check",
+  teamCreate: "Create team name",
+  teamConnect: "Connect a wallet on Sepolia with some test ETH to create one.",
+  teamAvailable: (name: string): string => `${name} is available.`,
+  teamTaken: (name: string): string => `${name} is taken; try another.`,
+  teamCheckFailed: "Could not check the name on Sepolia.",
+  teamSteps: {
+    deployRegistry: "Deploy the members registry",
+    deployResolver: "Deploy the resolver",
+    mint: "Mint test USDC",
+    approve: "Let the registrar spend it",
+    commit: "Commit to the name",
+    wait: "Wait out the commitment",
+    register: "Register the name",
+    setAddress: "Point the name at your address",
+  },
+  teamWaitSeconds: (seconds: number): string => `${seconds} s left`,
+  teamFailed:
+    "A step was cancelled or failed. Check the name again and start over.",
+  teamCreated: (name: string): string =>
+    `${name} is yours. The page now shows its members.`,
 };
