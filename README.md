@@ -139,14 +139,47 @@ address the moment the label is unregistered or expires.
 - **Sepolia only.** ENSv2 is not on mainnet yet; the addresses above are its
   Sepolia deployment.
 
-## Try it
+## Existing project vs built at ETHGlobal
 
-Install the `mdsig` command line tool with a Rust toolchain:
+This is an ENSv2 integration into Memona, Capsulizers' Markdown note app.
+
+| Existed before the event                                                                                                       | Built at ETHGlobal Tokyo                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Memona, a Tauri desktop and web note app in Rust and TypeScript, developed since 2023 (private source)                         | This repository: the sans-IO Rust library, the `mdsig` CLI, the WebAssembly bindings, and the live page                                                                                 |
+| Memona's plugin runtime and store, which let a WASI plugin open remote storage as a folder                                     | The [Memona signature plugin](https://git.capsulizers.com/commons/memona-plugin-signature), which signs every Markdown file saved through it and shows the verdict as a badge in Memona |
+| The [WebDAV filesystem plugin](https://git.capsulizers.com/commons/memona-plugin-webdav), which the signature plugin builds on | Memona fixes the end-to-end run turned up, such as a frontmatter editor that rewrote a long hex signature                                                                               |
+
+The signature plugin uses this library as a git dependency, so Memona, the CLI,
+and the page all run the same verification code.
+
+## Run locally
+
+Prerequisites:
+
+- A current stable Rust toolchain from [rustup](https://rustup.rs).
+- For the page, [Deno](https://deno.com) 2, the `wasm32-unknown-unknown` Rust
+  target, and `wasm-bindgen` 0.2.108, the exact version the bindings pin.
 
 ```sh
 git clone https://github.com/capsulizers/md-ens-signature
 cd md-ens-signature
+```
+
+### Command line
+
+Install `mdsig`:
+
+```sh
 cargo install --path crates/mdsig
+```
+
+Verify the demo files against ENSv2 on Sepolia. Exit codes are 0 verified, 2
+unsigned, 3 unauthorized, 4 tampered, and 1 on an error.
+
+```sh
+mdsig verify examples/signed-by-member.md
+mdsig verify examples/signed-by-revoked.md
+mdsig verify examples/signed-by-member.md --parent mdsig91205.eth --json
 ```
 
 The example note is unsigned, so `inspect` exits with 2:
@@ -174,15 +207,37 @@ sed 's/under 30/under 35/' signed.md > edited.md
 mdsig inspect edited.md
 ```
 
-`inspect` works offline. `verify` also asks ENSv2 on Sepolia who owns the signer
-name and compares that owner with the recovered address:
+`inspect` works offline. `verify` asks ENSv2 who owns the signer name:
 
 ```sh
 mdsig verify signed.md
 ```
 
 The test key owns no `bob.alice.eth` on Sepolia, so this exits with 3,
-unauthorized. A file signed by the owner of a registered name exits with 0, and
-an edited body exits with 4. `--parent alice.eth` accepts only that name and its
-subnames, `--rpc` picks another Sepolia node, and `--json` prints the verdict as
-JSON.
+unauthorized. `--parent` accepts only that name and its subnames, `--rpc` picks
+another Sepolia node, and `--json` prints the verdict as JSON.
+
+### Web page
+
+```sh
+rustup target add wasm32-unknown-unknown
+cargo install wasm-bindgen-cli --version 0.2.108
+cd web
+deno task build-wasm
+deno task dev
+```
+
+`build-wasm` compiles the library to WebAssembly and writes its bindings into
+the page; `dev` serves the page at the address Vite prints, by default
+http://localhost:5173/. Verifying needs no wallet; signing and managing members
+need a browser wallet such as MetaMask on Sepolia.
+
+## AI assistance
+
+This project was built with [Claude Code](https://claude.com/claude-code).
+Agents wrote most of the code, tests, and documentation, including this README,
+under the direction of the Capsulizers team, who set the design, the file
+format, and the ENSv2 permission model. Every change landed as a small pull
+request with passing CI; the
+[merged pull requests](https://github.com/capsulizers/md-ens-signature/pulls?q=is%3Apr+is%3Amerged)
+record what each one did and how it was checked.
