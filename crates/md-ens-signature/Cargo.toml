@@ -10,4 +10,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+alloy-primitives = { version = "1.7.3", default-features = false, features = ["k256"] }
+anyhow = "1.0.104"
+k256 = { version = "0.13", default-features = false, features = ["ecdsa"] }
 sha2 = { version = "0.10", default-features = false }
