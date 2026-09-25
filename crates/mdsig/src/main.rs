@@ -5,6 +5,7 @@
 
 mod inspect;
 mod sign;
+mod verify;
 
 use std::io::IsTerminal;
 use std::process::ExitCode;
@@ -24,6 +25,7 @@ struct Cli {
 enum Command {
   Sign(sign::Args),
   Inspect(inspect::Args),
+  Verify(verify::Args),
 }
 
 fn main() -> ExitCode {
@@ -37,6 +39,7 @@ fn main() -> ExitCode {
   let result = match cli.command {
     Command::Sign(args) => sign::run(&args),
     Command::Inspect(args) => inspect::run(&args),
+    Command::Verify(args) => verify::run(&args),
   };
   result.unwrap_or_else(|error| {
     error!("{error:#}");
