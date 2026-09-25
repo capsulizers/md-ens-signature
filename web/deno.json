@@ -70,6 +70,8 @@
   "imports": {
     "#components": "./src/components/mod.ts",
     "#context": "./src/context/mod.ts",
+    "#engine": "./src/engine/mod.ts",
+    "#utils": "./src/utils/mod.ts",
     "#constants": "./src/constants/mod.ts",
     "#wasm-pkg": "./src/wasm-pkg/md_ens_signature_wasm.js",
     "@cunarist/deno-import-check": "jsr:@cunarist/deno-import-check@0.9.0",

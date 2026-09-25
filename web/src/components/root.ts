@@ -4,13 +4,17 @@ import { customElement } from "lit/decorators.js";
 
 import { TEXT } from "#constants";
 import {
+  EMPTY_ENGINES,
   EMPTY_SETTINGS_CONTEXT,
+  type Engines,
+  enginesContext,
   type Settings,
   type SettingsContext,
   settingsContext,
   type SettingsPatch,
 } from "#context";
 
+import "./document-panel.ts";
 import "./settings-row.ts";
 
 declare global {
@@ -43,6 +47,10 @@ export class RootElement extends LitElement {
     }
   `;
 
+  /** The engines the page runs on, mocks until the WebAssembly build lands. */
+  @provide({ context: enginesContext })
+  accessor engines: Engines = EMPTY_ENGINES;
+
   @provide({ context: settingsContext })
   accessor #settings: SettingsContext = this.#buildSettings(
     EMPTY_SETTINGS_CONTEXT.settings,
@@ -55,6 +63,7 @@ export class RootElement extends LitElement {
         <p>${TEXT.subtitle}</p>
       </header>
       <md-settings-row></md-settings-row>
+      <md-document-panel></md-document-panel>
     `;
   }
 
