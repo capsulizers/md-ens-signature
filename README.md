@@ -63,7 +63,7 @@ grants or revokes members.
 ## How it works
 
 ```mermaid
-flowchart LR
+flowchart TD
   W["Member's wallet"] -- "personal_sign(signer name,<br/>body SHA-256)" --> F["Frontmatter<br/>signer: bob.team.eth<br/>signature: 0x..."]
   F -- "recover" --> A["Signing address"]
   F -- "UniversalResolverV2<br/>.findOwner(bob.team.eth)" --> O["Current owner"]
