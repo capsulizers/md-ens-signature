@@ -1,7 +1,4 @@
-import "@awesome.me/webawesome/dist/components/button/button.js";
-import "@awesome.me/webawesome/dist/components/divider/divider.js";
-import "@awesome.me/webawesome/dist/components/icon/icon.js";
-import WaInput from "@awesome.me/webawesome/dist/components/input/input.js";
+import "@awesome.me/webawesome/dist/components/spinner/spinner.js";
 import { consume } from "@lit/context";
 import { css, html, LitElement, type TemplateResult } from "lit";
 import { customElement, state } from "lit/decorators.js";
@@ -15,7 +12,7 @@ import {
   type SettingsContext,
   settingsContext,
 } from "#context";
-import type { Member, MemberStatus } from "#engine";
+import type { Member } from "#engine";
 import { syncAfterSet } from "#utils";
 
 import "./member-row.ts";
@@ -26,13 +23,7 @@ declare global {
   }
 }
 
-/** A row to draw: a member, or a name added here and not yet granted. */
-interface MemberEntry {
-  name: string;
-  status: MemberStatus | null;
-}
-
-/** Lists the parent name's members and lets its owner grant or revoke them. */
+/** Lists the parent name's members as ENSv2 on Sepolia reports them. */
 @customElement("md-permissions-panel")
 export class PermissionsPanelElement extends LitElement {
   static override styles = css`
@@ -52,7 +43,8 @@ export class PermissionsPanelElement extends LitElement {
     }
 
     .parent,
-    .empty {
+    .empty,
+    .loading {
       color: var(--wa-color-text-quiet);
       font-size: var(--wa-font-size-s);
     }
@@ -62,18 +54,14 @@ export class PermissionsPanelElement extends LitElement {
       font-size: var(--wa-font-size-s);
     }
 
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: var(--wa-space-xs);
+    }
+
     md-member-row + md-member-row {
       border-top: var(--wa-border-width-s) solid var(--wa-color-surface-border);
-    }
-
-    .add {
-      display: flex;
-      align-items: end;
-      gap: var(--wa-space-s);
-    }
-
-    .add wa-input {
-      flex: 1;
     }
   `;
 
@@ -92,12 +80,8 @@ export class PermissionsPanelElement extends LitElement {
   @state()
   accessor #members: Member[] = [];
 
-  /** Names added here that have not been granted yet. */
   @state()
-  accessor #newNames: string[] = [];
-
-  @state()
-  accessor #newLabel: string = "";
+  accessor #isLoading: boolean = false;
 
   @state()
   accessor #hasFailed: boolean = false;
@@ -106,13 +90,12 @@ export class PermissionsPanelElement extends LitElement {
 
   override render(): TemplateResult {
     const parentName = this.#settings.settings.parentName;
-    const rows = this.#renderRows(parentName);
+    const rows = this.#renderRows();
     const error = this.#hasFailed
       ? html`
         <div class="error" role="alert">${TEXT.loadFailed}</div>
       `
       : html``;
-    const isAddDisabled = this.#newLabel === "";
     const parentLine = TEXT.parentName(parentName);
     return html`
       <div>
@@ -121,46 +104,29 @@ export class PermissionsPanelElement extends LitElement {
       </div>
       ${error}
       <div>${rows}</div>
-      <wa-divider></wa-divider>
-      <div class="add">
-        <wa-input
-          size="s"
-          label=${TEXT.newMemberLabel}
-          placeholder=${TEXT.newMemberPlaceholder}
-          .value=${this.#newLabel}
-          @input=${this.#onNewLabelInput}
-          @keydown=${this.#onNewLabelKeyDown}
-        ></wa-input>
-        <wa-button size="s" ?disabled=${isAddDisabled} @click=${this.#add}>
-          <wa-icon slot="start" name="person-plus"></wa-icon>
-          ${TEXT.addMember}
-        </wa-button>
-      </div>
     `;
   }
 
-  #renderRows(parentName: string): TemplateResult[] | TemplateResult {
-    const known = new Set(
-      this.#members.map((member: Member): string => member.name),
-    );
-    const entries: MemberEntry[] = [
-      ...this.#members,
-      ...this.#newNames
-        .filter((name: string): boolean => !known.has(name))
-        .map((name: string): MemberEntry => ({ name, status: null })),
-    ];
-    if (entries.length === 0) {
+  #renderRows(): TemplateResult[] | TemplateResult {
+    if (this.#isLoading && this.#members.length === 0) {
+      return html`
+        <div class="loading">
+          <wa-spinner></wa-spinner>
+          ${TEXT.loadingMembers}
+        </div>
+      `;
+    }
+    if (this.#hasFailed) {
+      return html``;
+    }
+    if (this.#members.length === 0) {
       return html`
         <div class="empty">${TEXT.noMembers}</div>
       `;
     }
-    return entries.map((entry: MemberEntry): TemplateResult =>
+    return this.#members.map((member: Member): TemplateResult =>
       html`
-        <md-member-row
-          .name=${entry.name}
-          .status=${entry.status}
-          .parentName=${parentName}
-        ></md-member-row>
+        <md-member-row .member=${member}></md-member-row>
       `
     );
   }
@@ -169,6 +135,7 @@ export class PermissionsPanelElement extends LitElement {
     this.#loadRequest += 1;
     const request = this.#loadRequest;
     const settings = this.#settings.settings;
+    this.#isLoading = true;
     try {
       const members = await this.#engines.permissions.members(
         settings.parentName,
@@ -183,32 +150,10 @@ export class PermissionsPanelElement extends LitElement {
         this.#members = [];
         this.#hasFailed = true;
       }
+    } finally {
+      if (request === this.#loadRequest) {
+        this.#isLoading = false;
+      }
     }
-  }
-
-  #onNewLabelInput(event: Event): void {
-    const input = event.currentTarget;
-    if (input instanceof WaInput) {
-      this.#newLabel = (input.value ?? "").trim().toLowerCase();
-    }
-  }
-
-  #onNewLabelKeyDown(event: KeyboardEvent): void {
-    if (event.key === "Enter" && this.#newLabel !== "") {
-      this.#add();
-    }
-  }
-
-  /** Adds a row for the typed name, completing a bare label with the parent. */
-  #add(): void {
-    const parentName = this.#settings.settings.parentName;
-    const suffix = `.${parentName}`;
-    const name = this.#newLabel.endsWith(suffix)
-      ? this.#newLabel
-      : `${this.#newLabel}${suffix}`;
-    if (!this.#newNames.includes(name)) {
-      this.#newNames = [...this.#newNames, name];
-    }
-    this.#newLabel = "";
   }
 }

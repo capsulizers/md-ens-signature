@@ -1,8 +1,7 @@
 import { createContext } from "@lit/context";
 
 import {
-  MockPermissionsEngine,
-  MockRegistry,
+  ChainPermissionsEngine,
   type PermissionsEngine,
   type SignatureEngine,
   WasmSignatureEngine,
@@ -21,11 +20,11 @@ export interface Engines {
 /** Engines context for Lit consumers. */
 export const enginesContext = createContext<Engines>(Symbol("engines"));
 
-/** The engines, verifying against Sepolia and granting in a mock registry. */
+/** The engines: members come from Sepolia, signatures from WebAssembly. */
 export function createEngines(notifyChanged: () => void): Engines {
   return {
     signature: new WasmSignatureEngine(),
-    permissions: new MockPermissionsEngine(new MockRegistry()),
+    permissions: new ChainPermissionsEngine(),
     revision: 0,
     notifyChanged,
   };

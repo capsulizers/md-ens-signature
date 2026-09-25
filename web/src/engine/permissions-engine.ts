@@ -1,29 +1,21 @@
+import type { Address } from "viem";
+
 /** Whether a member name may sign for its parent right now. */
 export type MemberStatus = "GRANTED" | "REVOKED";
 
-/** One subname of the parent and its signing permission. */
+/** One subname the parent has ever registered, as the chain sees it now. */
 export interface Member {
+  /** The full name, such as `carol.team.eth`. */
   name: string;
+  /** The label under the parent, such as `carol`. */
+  label: string;
+  /** Who owns the name now, or null once it is revoked or expired. */
+  owner: Address | null;
   status: MemberStatus;
 }
 
-/** A transaction the wallet has sent and the chain has yet to confirm. */
-export interface Transaction {
-  hash: string;
-}
-
-/**
- * Reads and changes which subnames may sign for a parent name. The real
- * implementation will send Sepolia transactions through viem and MetaMask;
- * until then the page runs on a mock.
- */
+/** Reads which subnames may sign for a parent name, from ENSv2 on Sepolia. */
 export interface PermissionsEngine {
-  /** The parent's members and whether each may sign now. */
+  /** Every subname the parent's registry has registered, oldest first. */
   members(parentName: string, rpcUrl: string): Promise<Member[]>;
-  /** Sends the transaction that lets `member` sign for `parentName`. */
-  grant(parentName: string, member: string): Promise<Transaction>;
-  /** Sends the transaction that stops `member` signing for `parentName`. */
-  revoke(parentName: string, member: string): Promise<Transaction>;
-  /** Resolves once the transaction is confirmed on chain. */
-  confirm(transaction: Transaction): Promise<void>;
 }
