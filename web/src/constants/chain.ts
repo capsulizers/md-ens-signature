@@ -13,3 +13,6 @@ export const ENSV2_START_BLOCK = 11_163_403n;
 
 /** The widest block range the public Sepolia endpoint answers logs for. */
 export const LOG_BLOCK_RANGE = 50_000n;
+
+/** How long a granted member name lasts before it must be granted again. */
+export const MEMBER_DURATION_SECONDS = 365n * 24n * 60n * 60n;

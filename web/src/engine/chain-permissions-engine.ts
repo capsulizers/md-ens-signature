@@ -1,7 +1,10 @@
 import {
   type Address,
   createPublicClient,
+  encodeFunctionData,
+  type Hex,
   http,
+  labelhash,
   parseAbi,
   parseAbiItem,
   type PublicClient,
@@ -13,15 +16,25 @@ import { packetToBytes } from "viem/ens";
 import {
   ENSV2_START_BLOCK,
   LOG_BLOCK_RANGE,
+  MEMBER_DURATION_SECONDS,
   UNIVERSAL_RESOLVER,
 } from "#constants";
 
-import type { Member, PermissionsEngine } from "./permissions-engine.ts";
-import { WALLET_CHAIN } from "./wallet.ts";
+import type {
+  Member,
+  PermissionsEngine,
+  Transaction,
+} from "./permissions-engine.ts";
+import { WALLET_CHAIN, walletClient } from "./wallet.ts";
 
 const UNIVERSAL_RESOLVER_ABI = parseAbi([
   "function findOwner(bytes name) view returns (address)",
   "function findExactRegistry(bytes name) view returns (address)",
+]);
+
+const USER_REGISTRY_ABI = parseAbi([
+  "function register(string label, address owner, address registry, address resolver, uint256 roleBitmap, uint64 expiry) returns (uint256)",
+  "function unregister(uint256 anyId)",
 ]);
 
 /** Emitted once, when a registry proxy is initialized. */
@@ -36,6 +49,8 @@ const LABEL_REGISTERED = parseAbiItem(
  * Reads a parent's members straight from ENSv2 on Sepolia. The parent's own
  * UserRegistry lists every label it ever registered in its logs, and
  * `findOwner` says who holds each one now, so nothing is kept locally.
+ * Granting registers a label owned by the member with no roles, so only the
+ * parent's owner can take it back.
  */
 export class ChainPermissionsEngine implements PermissionsEngine {
   #clients = new Map<string, PublicClient>();
@@ -59,6 +74,72 @@ export class ChainPermissionsEngine implements PermissionsEngine {
         };
       }),
     );
+  }
+
+  owner(name: string, rpcUrl: string): Promise<Address | null> {
+    return this.#owner(this.#client(rpcUrl), name);
+  }
+
+  async grant(
+    parentName: string,
+    label: string,
+    member: Address,
+    rpcUrl: string,
+  ): Promise<Transaction> {
+    const expiry = BigInt(Math.floor(Date.now() / 1000)) +
+      MEMBER_DURATION_SECONDS;
+    const data = encodeFunctionData({
+      abi: USER_REGISTRY_ABI,
+      functionName: "register",
+      args: [label, member, zeroAddress, zeroAddress, 0n, expiry],
+    });
+    return await this.#send(parentName, rpcUrl, data);
+  }
+
+  async revoke(
+    parentName: string,
+    label: string,
+    rpcUrl: string,
+  ): Promise<Transaction> {
+    const data = encodeFunctionData({
+      abi: USER_REGISTRY_ABI,
+      functionName: "unregister",
+      args: [BigInt(labelhash(label))],
+    });
+    return await this.#send(parentName, rpcUrl, data);
+  }
+
+  async confirm(transaction: Transaction, rpcUrl: string): Promise<void> {
+    const receipt = await this.#client(rpcUrl).waitForTransactionReceipt({
+      hash: transaction.hash,
+    });
+    if (receipt.status !== "success") {
+      throw new Error("The transaction reverted.");
+    }
+  }
+
+  /** Sends one call to the parent's registry from the wallet's account. */
+  async #send(
+    parentName: string,
+    rpcUrl: string,
+    data: Hex,
+  ): Promise<Transaction> {
+    const registry = await this.#registry(this.#client(rpcUrl), parentName);
+    if (registry === null) {
+      throw new Error("The parent name has no registry.");
+    }
+    const wallet = walletClient();
+    const [account] = await wallet.requestAddresses();
+    if (account === undefined) {
+      throw new Error("The wallet returned no account.");
+    }
+    const hash = await wallet.sendTransaction({
+      account,
+      chain: WALLET_CHAIN,
+      to: registry,
+      data,
+    });
+    return { hash };
   }
 
   /** The registry that holds the parent's subnames, or null if none. */
@@ -135,7 +216,7 @@ export class ChainPermissionsEngine implements PermissionsEngine {
 }
 
 /** A name in the DNS wire format ENSv2 contracts take, as hex. */
-export function dnsEncode(name: string): `0x${string}` {
+export function dnsEncode(name: string): Hex {
   return toHex(packetToBytes(name));
 }
 
