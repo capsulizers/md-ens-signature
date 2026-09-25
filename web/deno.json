@@ -3,6 +3,7 @@
   "tasks": {
     "dev": "deno run -A npm:vite",
     "build": "deno run -A npm:vite build",
+    "build-wasm": "deno run --allow-run --allow-read scripts/build-wasm.ts",
     "import-check": "deno run -A @cunarist/deno-import-check src/mod.ts",
     "lit-check": "deno run -A @cunarist/deno-lit-analyzer"
   },
@@ -14,7 +15,8 @@
   },
   "exclude": [
     ".vite",
-    "dist"
+    "dist",
+    "src/wasm-pkg"
   ],
   "compilerOptions": {
     "strict": true,
