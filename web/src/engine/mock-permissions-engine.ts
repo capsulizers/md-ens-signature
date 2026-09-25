@@ -13,7 +13,7 @@ const MOCK_CONFIRM_MS = 2500;
 /**
  * A stand-in for the viem and MetaMask engine. Sending waits a moment and
  * returns a random hash; confirming waits again and then applies the change
- * to the shared mock registry, so the signature mock sees it too.
+ * to the mock registry.
  */
 export class MockPermissionsEngine implements PermissionsEngine {
   #registry: MockRegistry;

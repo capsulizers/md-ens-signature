@@ -125,7 +125,7 @@ export class VerdictBadgeElement extends LitElement {
           tone: "warning",
           icon: "shield-exclamation",
           title: TEXT.unauthorized,
-          detail: TEXT.unauthorizedDetail(verdict.signer),
+          detail: TEXT.unauthorizedDetail(verdict.signer, verdict.reason),
         };
       case "unsigned":
         return {
@@ -133,6 +133,13 @@ export class VerdictBadgeElement extends LitElement {
           icon: "file-earmark",
           title: TEXT.unsigned,
           detail: TEXT.unsignedDetail,
+        };
+      case "unreachable":
+        return {
+          tone: "neutral",
+          icon: "question-diamond",
+          title: TEXT.unreachable,
+          detail: TEXT.unreachableDetail,
         };
     }
   }

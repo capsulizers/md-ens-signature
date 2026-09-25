@@ -1102,6 +1102,8 @@ dependencies = [
  "js-sys",
  "md-ens-signature",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

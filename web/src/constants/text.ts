@@ -23,10 +23,12 @@ export const TEXT = {
   tamperedDetail: (signer: string): string =>
     `The body or key no longer matches ${signer}`,
   unauthorized: "Unauthorized",
-  unauthorizedDetail: (signer: string): string =>
-    `Signer lost permission: ${signer}`,
+  unauthorizedDetail: (signer: string, reason: string): string =>
+    `${signer} may not sign now: ${reason}`,
   unsigned: "Unsigned",
   unsignedDetail: "This file carries no signature.",
+  unreachable: "Not checked",
+  unreachableDetail: "The Sepolia RPC endpoint did not answer.",
   signerLabel: "Sign as",
   signerPlaceholder: "bob.alice.eth",
   sign: "Sign with wallet",

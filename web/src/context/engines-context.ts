@@ -21,12 +21,11 @@ export interface Engines {
 /** Engines context for Lit consumers. */
 export const enginesContext = createContext<Engines>(Symbol("engines"));
 
-/** The engines, sharing one mock registry so a revoke shows in verdicts. */
+/** The engines, verifying against Sepolia and granting in a mock registry. */
 export function createEngines(notifyChanged: () => void): Engines {
-  const registry = new MockRegistry();
   return {
-    signature: new WasmSignatureEngine(registry),
-    permissions: new MockPermissionsEngine(registry),
+    signature: new WasmSignatureEngine(),
+    permissions: new MockPermissionsEngine(new MockRegistry()),
     revision: 0,
     notifyChanged,
   };
