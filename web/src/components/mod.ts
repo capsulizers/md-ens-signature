@@ -6,6 +6,7 @@ export * from "./permissions-panel.ts";
 export * from "./root.ts";
 export * from "./settings-row.ts";
 export * from "./sign-actions.ts";
+export * from "./team-wizard.ts";
 export * from "./transaction-note.ts";
 export * from "./verdict-badge.ts";
 export * from "./wallet-button.ts";

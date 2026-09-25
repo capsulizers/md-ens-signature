@@ -20,6 +20,7 @@ import { hasWallet, switchToSepolia, type WalletState } from "#engine";
 import "./document-panel.ts";
 import "./permissions-panel.ts";
 import "./settings-row.ts";
+import "./team-wizard.ts";
 import "./wallet-button.ts";
 import { WalletController } from "./wallet-controller.ts";
 
@@ -46,6 +47,12 @@ export class RootElement extends LitElement {
       display: grid;
       grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
       align-items: start;
+      gap: var(--wa-space-xl);
+    }
+
+    .side {
+      display: flex;
+      flex-direction: column;
       gap: var(--wa-space-xl);
     }
 
@@ -101,7 +108,10 @@ export class RootElement extends LitElement {
       <md-settings-row></md-settings-row>
       <div class="panels">
         <md-document-panel></md-document-panel>
-        <md-permissions-panel></md-permissions-panel>
+        <div class="side">
+          <md-permissions-panel></md-permissions-panel>
+          <md-team-wizard></md-team-wizard>
+        </div>
       </div>
     `;
   }

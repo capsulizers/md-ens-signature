@@ -3,6 +3,8 @@ import {
   createWalletClient,
   custom,
   type EIP1193Provider,
+  type Hash,
+  type Hex,
   stringToHex,
   SwitchChainError,
   type WalletClient,
@@ -70,14 +72,28 @@ export async function switchToSepolia(): Promise<void> {
  * `personal_sign`, returning the 65-byte signature as hex.
  */
 export async function signWithWallet(message: string): Promise<string> {
-  const client = walletClient();
-  const [account] = await client.requestAddresses();
+  return await walletClient().signMessage({
+    account: await walletAccount(),
+    message: { raw: stringToHex(message) },
+  });
+}
+
+/** The wallet's account, asking the user to connect one if needed. */
+export async function walletAccount(): Promise<Address> {
+  const [account] = await walletClient().requestAddresses();
   if (account === undefined) {
     throw new Error("The wallet returned no account.");
   }
-  return await client.signMessage({
-    account,
-    message: { raw: stringToHex(message) },
+  return account;
+}
+
+/** Has the wallet's account send `data` to `to` on Sepolia. */
+export async function sendFromWallet(to: Address, data: Hex): Promise<Hash> {
+  return await walletClient().sendTransaction({
+    account: await walletAccount(),
+    chain: WALLET_CHAIN,
+    to,
+    data,
   });
 }
 
