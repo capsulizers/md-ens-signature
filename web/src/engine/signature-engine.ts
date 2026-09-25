@@ -30,8 +30,8 @@ export interface VerifiedVerdict {
 }
 
 /**
- * Signs and verifies Markdown files. The library compiled to WebAssembly
- * will implement this; until then the page runs on a mock.
+ * Signs and verifies Markdown files, implemented by the library compiled
+ * to WebAssembly.
  */
 export interface SignatureEngine {
   /** Checks a file's signature against ENS through the given RPC endpoint. */

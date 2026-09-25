@@ -3,9 +3,9 @@ import { createContext } from "@lit/context";
 import {
   MockPermissionsEngine,
   MockRegistry,
-  MockSignatureEngine,
   type PermissionsEngine,
   type SignatureEngine,
+  WasmSignatureEngine,
 } from "#engine";
 
 /** The engines the page signs, verifies, and grants with. */
@@ -21,11 +21,11 @@ export interface Engines {
 /** Engines context for Lit consumers. */
 export const enginesContext = createContext<Engines>(Symbol("engines"));
 
-/** The mock engines, sharing one registry so a revoke shows in verdicts. */
-export function createMockEngines(notifyChanged: () => void): Engines {
+/** The engines, sharing one mock registry so a revoke shows in verdicts. */
+export function createEngines(notifyChanged: () => void): Engines {
   const registry = new MockRegistry();
   return {
-    signature: new MockSignatureEngine(registry),
+    signature: new WasmSignatureEngine(registry),
     permissions: new MockPermissionsEngine(registry),
     revision: 0,
     notifyChanged,
@@ -33,4 +33,4 @@ export function createMockEngines(notifyChanged: () => void): Engines {
 }
 
 /** Engines used before a provider is connected. */
-export const EMPTY_ENGINES: Engines = createMockEngines((): void => {});
+export const EMPTY_ENGINES: Engines = createEngines((): void => {});
