@@ -4,7 +4,7 @@ import { customElement } from "lit/decorators.js";
 
 import { TEXT } from "#constants";
 import {
-  EMPTY_ENGINES,
+  createMockEngines,
   EMPTY_SETTINGS_CONTEXT,
   type Engines,
   enginesContext,
@@ -15,6 +15,7 @@ import {
 } from "#context";
 
 import "./document-panel.ts";
+import "./permissions-panel.ts";
 import "./settings-row.ts";
 
 declare global {
@@ -36,6 +37,19 @@ export class RootElement extends LitElement {
       padding: var(--wa-space-2xl) var(--wa-space-l);
     }
 
+    .panels {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      align-items: start;
+      gap: var(--wa-space-xl);
+    }
+
+    @media (max-width: 60rem) {
+      .panels {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
     h1 {
       margin: 0;
       font-size: var(--wa-font-size-2xl);
@@ -47,9 +61,10 @@ export class RootElement extends LitElement {
     }
   `;
 
-  /** The engines the page runs on, mocks until the WebAssembly build lands. */
   @provide({ context: enginesContext })
-  accessor engines: Engines = EMPTY_ENGINES;
+  accessor #engines: Engines = createMockEngines((): void => {
+    this.#engines = { ...this.#engines, revision: this.#engines.revision + 1 };
+  });
 
   @provide({ context: settingsContext })
   accessor #settings: SettingsContext = this.#buildSettings(
@@ -63,7 +78,10 @@ export class RootElement extends LitElement {
         <p>${TEXT.subtitle}</p>
       </header>
       <md-settings-row></md-settings-row>
-      <md-document-panel></md-document-panel>
+      <div class="panels">
+        <md-document-panel></md-document-panel>
+        <md-permissions-panel></md-permissions-panel>
+      </div>
     `;
   }
 

@@ -1,9 +1,7 @@
+import type { MockRegistry } from "./mock-registry.ts";
 import type { SignatureEngine, Verdict } from "./signature-engine.ts";
 
 const FENCE = "---";
-
-/** Member names the mock treats as granted by their parent name. */
-const MOCK_GRANTED_MEMBERS = new Set(["bob.alice.eth"]);
 
 /** The address the mock reports for any verified signer. */
 const MOCK_ADDRESS = "0x26FaCbA3f9A98b20e40f2B41c1e1236dAA75ceE5";
@@ -21,7 +19,12 @@ interface SplitFile {
  * one made in a wallet, is also accepted for the message it was made over.
  */
 export class MockSignatureEngine implements SignatureEngine {
+  #registry: MockRegistry;
   #attached = new Map<string, string>();
+
+  constructor(registry: MockRegistry) {
+    this.#registry = registry;
+  }
 
   async verify(
     markdown: string,
@@ -42,8 +45,8 @@ export class MockSignatureEngine implements SignatureEngine {
     if (!expected.has(signature.toLowerCase())) {
       return { kind: "tampered", signer };
     }
-    const isMember = signer.endsWith(`.${parentName}`) &&
-      MOCK_GRANTED_MEMBERS.has(signer);
+    const isMember =
+      this.#registry.members(parentName).get(signer) === "GRANTED";
     return isMember
       ? { kind: "verified", signer, address: MOCK_ADDRESS }
       : { kind: "unauthorized", signer };
