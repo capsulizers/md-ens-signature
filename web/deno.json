@@ -66,6 +66,7 @@
   },
   "imports": {
     "#components": "./src/components/mod.ts",
+    "#context": "./src/context/mod.ts",
     "#constants": "./src/constants/mod.ts",
     "@cunarist/deno-import-check": "jsr:@cunarist/deno-import-check@0.9.0",
     "@cunarist/deno-lit-analyzer": "jsr:@cunarist/deno-lit-analyzer@0.4.3",
