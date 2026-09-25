@@ -2,7 +2,7 @@
 title: Mean reversion on BTC 4h
 tags: [skill, trading]
 signer: carol.mdsig91205.eth
-signature: "0xf32b0d868ae2f7e9e38dc2e0277c71bd7e16b431c9374257f8cb415d096617547db5649afbae2396f00f89ec157c40b20a9e3cb0e119d6a1f2bc39ddb274f8621b"
+signature: "0xc425a138fc24aee4084fe2be35db659bc1dcea3fbe49980b0f695d52a488fb8777bc719a33d5bef4b232b7d4878f01163302736b73300c466db2a10f65a2225b1c"
 ---
 # Mean reversion on BTC 4h
 

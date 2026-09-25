@@ -48,8 +48,8 @@ No wallet needed; the page reads ENSv2 on Sepolia directly.
 2. In the box, change `under 30` to `under 35`. It turns **Tampered**.
 3. Replace the text with
    [`signed-by-revoked.md`](examples/signed-by-revoked.md). It shows
-   **Unauthorized**: the team's owner revoked `carol.mdsig91205.eth`, so her
-   signature no longer counts.
+   **Unauthorized**: the team's owner revoked `carol.mdsig91205.eth`, so a file
+   signed while it was granted no longer counts.
 
 | Step                       | Live page                                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -86,6 +86,58 @@ flowchart TD
   `register` on the parent's own `UserRegistry`, making the member the owner of
   their subname with no roles, so they cannot transfer or unregister it.
   Revoking calls `unregister`, and every file that name signed stops verifying.
+
+## Why ENSv2 is central
+
+ENSv2 is the permission system, not a lookup on the side. Without it a signature
+only proves that some key signed; with it, the signature says a named member of
+a team signed, and the team can take that back. Contract addresses come from the
+ENSv2 Sepolia deployment list; team names, their registries, and their members
+are read from the chain at run time.
+
+| ENSv2 feature                        | How this project uses it                                                                                                                                                   | Source and Sepolia address                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hierarchical registries              | Each team name gets its own `UserRegistry`, and members are subnames in it.                                                                                                | [`UserRegistry`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/registry/UserRegistry.sol#L43), [`PermissionedRegistry`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/registry/PermissionedRegistry.sol#L181) / [`UserRegistryImpl`](https://sepolia.etherscan.io/address/0x840fa461059862ea466a711e8c98c8de732061c0)                                                                        |
+| `VerifiableFactory`                  | The page deploys the team's registry and resolver as proxies whose code anyone can verify.                                                                                 | [`deployProxy`](https://github.com/ensdomains/verifiable-factory/blob/c1090aec465ab30d494c96bd7d2a147b4f0b0173/src/VerifiableFactory.sol#L32) / [`VerifiableFactory`](https://sepolia.etherscan.io/address/0x118bc31a50d559f7015a8da26d54b3b030cdb70f)                                                                                                                                                                                                                                                         |
+| Enhanced Access Control role bitmaps | The team owner holds every root role, so they can register and unregister any label. Members get `roleBitmap` 0: they cannot transfer, re-point, or unregister their name. | [`EnhancedAccessControl`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/access-control/EnhancedAccessControl.sol#L19), [transfer check](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/registry/PermissionedRegistry.sol#L489), [`unregister`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/registry/PermissionedRegistry.sol#L198) |
+| `PermissionedResolver`               | Each team deploys one and points the team name at its owner's address.                                                                                                     | [`PermissionedResolver`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/resolver/PermissionedResolver.sol#L409) / [`PermissionedResolverImpl`](https://sepolia.etherscan.io/address/0x7e4b2d59938930168024201752ee5503df402303)                                                                                                                                                                                                                        |
+| `ETHRegistrar` with a stablecoin     | The page registers a team `.eth` name with commit and reveal, paid in test USDC.                                                                                           | [`ETHRegistrar`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/registrar/ETHRegistrar.sol#L123) / [`ETHRegistrar`](https://sepolia.etherscan.io/address/0xa4449a0dd2b83007553d9b1d28b583a46a805a30), [`MockUSDC`](https://sepolia.etherscan.io/address/0xd3322b29a7bdee707d1684676f149bf41aa3422f)                                                                                                                                                    |
+| `UniversalResolverV2.findOwner`      | Every verifier, in Rust, WebAssembly, and the CLI, asks it who owns the signer name now. The page also uses `findExactRegistry` to find a team's registry.                 | [`findOwner`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/universalResolver/UniversalResolverV2.sol#L69) / [`UniversalResolverV2`](https://sepolia.etherscan.io/address/0x85edf8b6b7d4211e2b07aa687506b746357b92cf)                                                                                                                                                                                                                                 |
+
+In this repository, the verification rule lives in
+[the library's `verify`](crates/md-ens-signature/src/verify.rs) and the
+`findOwner` call in [`ens.rs`](crates/md-ens-signature/src/ens.rs); the page's
+team setup and grant and revoke calls are in
+[`chain-team-engine.ts`](web/src/engine/chain-team-engine.ts) and
+[`chain-permissions-engine.ts`](web/src/engine/chain-permissions-engine.ts). The
+demo's `carol.mdsig91205.eth` was
+[granted](https://sepolia.etherscan.io/tx/0xa1c17c61c314a8506568ba8dae704f668e7c2e3a7e7c1b14447ae50dfbc0c6b6)
+and then
+[revoked](https://sepolia.etherscan.io/tx/0x094faa043c71fbe857b34f24cb38cbd56e3df4d89500a21ee98616800f7ce12d)
+this way.
+
+### Why not `resolve(addr)`
+
+The obvious check, resolving the signer name's `addr` record, gives the wrong
+answer after a revoke. ENSv2 resolution
+[walks up to the nearest resolver](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/universalResolver/libraries/LibRegistry.sol#L21),
+so once `carol.team.eth` is unregistered, the team's resolver still answers for
+it. `findOwner` asks the parent's registry itself, which returns the zero
+address the moment the label is unregistered or expires.
+
+### Honest limits
+
+- **Trust is a Sepolia RPC node.** Verifiers believe what their node returns for
+  `findOwner`. Any node works, and both the page and the CLI take your own, but
+  nothing checks the answer against a light client.
+- **A signature proves who, not what.** Verified means a current member signed
+  this exact body. It says nothing about whether the content is safe to run.
+- **Revocation is retroactive by design.** Verification asks who owns the name
+  now, so revoking a member also invalidates every file they signed before, and
+  granting the name again to a new address makes old files Tampered. That is the
+  point for agent skills, but it is not an archive-style timestamp.
+- **Sepolia only.** ENSv2 is not on mainnet yet; the addresses above are its
+  Sepolia deployment.
 
 ## Try it
 
