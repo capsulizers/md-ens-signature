@@ -14,6 +14,7 @@ import type { Verdict } from "#engine";
 import { syncAfterSet } from "#utils";
 
 import "./file-area.ts";
+import "./sign-actions.ts";
 import "./verdict-badge.ts";
 import { VerifyController } from "./verify-controller.ts";
 
@@ -57,6 +58,11 @@ export class DocumentPanelElement extends LitElement {
         .markdown=${this.#markdown}
         @markdown-change=${this.#onMarkdownChange}
       ></md-file-area>
+      <md-sign-actions
+        .markdown=${this.#markdown}
+        .verdict=${this.#verdict}
+        @markdown-change=${this.#onMarkdownChange}
+      ></md-sign-actions>
     `;
   }
 
