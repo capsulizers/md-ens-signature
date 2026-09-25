@@ -69,7 +69,7 @@ export class FileAreaElement extends LitElement {
         @drop=${this.#onDrop}
       >
         <wa-textarea
-          rows="16"
+          rows="12"
           resize="vertical"
           placeholder=${TEXT.filePlaceholder}
           .value=${this.markdown}

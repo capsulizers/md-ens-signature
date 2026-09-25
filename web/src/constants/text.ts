@@ -21,4 +21,10 @@ export const TEXT = {
     `Signer lost permission: ${signer}`,
   unsigned: "Unsigned",
   unsignedDetail: "This file carries no signature.",
+  signerLabel: "Sign as",
+  signerPlaceholder: "bob.alice.eth",
+  sign: "Sign with wallet",
+  download: "Download signed file",
+  noWalletHint: "Install MetaMask or another browser wallet to sign.",
+  signFailed: "Signing was cancelled or failed.",
 };
