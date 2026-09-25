@@ -13,6 +13,13 @@ export default defineConfig({
   clearScreen: false,
   build: {
     assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        // viem is as large as the rest of the page, so it gets a chunk of its
+        // own that browsers cache across page updates.
+        manualChunks: { viem: ["viem"] },
+      },
+    },
   },
   resolve: {
     alias: Object.fromEntries(buildWorkspaceAliases()),
