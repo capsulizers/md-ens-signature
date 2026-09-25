@@ -1,8 +1,8 @@
 //! The EIP-191 side of a signature: the message a signer signs, and signing
-//! it with an Ethereum key.
+//! and recovering it with an Ethereum key.
 
 use alloy_primitives::{Address, Signature, eip191_hash_message, hex};
-use anyhow::anyhow;
+use anyhow::{anyhow, bail};
 use k256::ecdsa::SigningKey;
 
 /// Builds the exact text a signer signs with EIP-191 `personal_sign`.
@@ -37,6 +37,30 @@ pub fn sign(
   Ok(hex::encode_prefixed(signature.as_bytes()))
 }
 
+/// Recovers the address that made `signature_hex` over the message for
+/// `signer` and `body_digest`.
+///
+/// The signature is 65 bytes of hex, with or without `0x`, and its `v` may be
+/// 0, 1, 27, or 28. A signature over a different message recovers a different
+/// address rather than failing.
+pub fn recover(
+  signature_hex: &str,
+  signer: &str,
+  body_digest: &[u8; 32],
+) -> anyhow::Result<Address> {
+  let bytes: [u8; 65] = hex::decode_to_array(signature_hex.trim())
+    .map_err(|_| anyhow!("The signature is not 65 bytes of hex"))?;
+  if ![0, 1, 27, 28].contains(&bytes[64]) {
+    bail!("The signature's v byte is not 0, 1, 27, or 28");
+  }
+  let signature = Signature::from_raw_array(&bytes)
+    .map_err(|error| anyhow!("Invalid signature: {error}"))?;
+  let message = signing_message(signer, body_digest);
+  signature
+    .recover_address_from_msg(message.as_bytes())
+    .map_err(|error| anyhow!("Failed to recover the signer: {error}"))
+}
+
 /// Derives the Ethereum address of a private key.
 pub fn address_of(private_key: &[u8; 32]) -> anyhow::Result<Address> {
   Ok(Address::from_private_key(&signing_key(private_key)?))
@@ -49,7 +73,7 @@ fn signing_key(private_key: &[u8; 32]) -> anyhow::Result<SigningKey> {
 
 #[cfg(test)]
 mod tests {
-  use super::{address_of, sign, signing_message};
+  use super::{address_of, recover, sign, signing_message};
   use alloy_primitives::{Address, address, hex};
 
   const KEY: [u8; 32] =
@@ -81,8 +105,49 @@ mod tests {
   }
 
   #[test]
+  fn sign_then_recover_round_trips() -> anyhow::Result<()> {
+    let signature = sign(&KEY, "bob.alice.eth", &DIGEST)?;
+    assert_eq!(signature.len(), 132);
+    assert!(signature.starts_with("0x"));
+    assert_eq!(recover(&signature, "bob.alice.eth", &DIGEST)?, ADDRESS);
+    Ok(())
+  }
+
+  #[test]
   fn signature_matches_viem_personal_sign() -> anyhow::Result<()> {
     assert_eq!(sign(&KEY, "bob.alice.eth", &DIGEST)?, VIEM_SIGNATURE);
     Ok(())
+  }
+
+  #[test]
+  fn recover_accepts_v_zero_and_one() -> anyhow::Result<()> {
+    let signature = sign(&KEY, "bob.alice.eth", &DIGEST)?;
+    let (rs, v) = signature.split_at(130);
+    let v = if v == "1b" { "00" } else { "01" };
+    let lowered = format!("{rs}{v}");
+    assert_eq!(recover(&lowered, "bob.alice.eth", &DIGEST)?, ADDRESS);
+    Ok(())
+  }
+
+  #[test]
+  fn tampered_digest_recovers_another_address() -> anyhow::Result<()> {
+    let signature = sign(&KEY, "bob.alice.eth", &DIGEST)?;
+    let tampered = [0xac; 32];
+    assert_ne!(recover(&signature, "bob.alice.eth", &tampered)?, ADDRESS);
+    Ok(())
+  }
+
+  #[test]
+  fn malformed_signatures_are_errors() {
+    for bad in [
+      "",
+      "0x",
+      "0xzz",
+      "0x1234",
+      &format!("0x{}", "00".repeat(66)),
+      &format!("0x{}25", "11".repeat(64)),
+    ] {
+      assert!(recover(bad, "bob.alice.eth", &DIGEST).is_err(), "{bad}");
+    }
   }
 }
