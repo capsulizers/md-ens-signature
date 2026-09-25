@@ -1,5 +1,7 @@
 export * from "./document-panel.ts";
 export * from "./file-area.ts";
+export * from "./member-row.ts";
+export * from "./permissions-panel.ts";
 export * from "./root.ts";
 export * from "./settings-row.ts";
 export * from "./sign-actions.ts";
