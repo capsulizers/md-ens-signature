@@ -152,14 +152,16 @@ pub fn read_signature(markdown: &str) -> Option<SignatureFields> {
 
 /// Writes the signature fields into the frontmatter and returns the new file.
 ///
-/// Existing `signer` and `signature` lines are replaced in place, missing ones
+/// The signer is written bare and the signature double-quoted, because YAML
+/// reads a bare `0x...` value as an integer rather than a string. Existing `signer` and `signature` lines are replaced in place, missing ones
 /// are added just before the closing `---`, and a file without frontmatter
 /// gets a new block at the top. Every other byte, including the body and the
 /// file's line endings, stays the same, so the body digest does not change.
 pub fn write_signature(markdown: &str, fields: &SignatureFields) -> String {
+  let signature = format!("\"{}\"", fields.signature);
   let entries = [
     (SIGNER_KEY, fields.signer.as_str()),
-    (SIGNATURE_KEY, fields.signature.as_str()),
+    (SIGNATURE_KEY, signature.as_str()),
   ];
   let Some(block) = frontmatter(markdown) else {
     let newline = if markdown.contains("\r\n") {
@@ -348,7 +350,7 @@ mod tests {
     let signed = write_signature(markdown, &fields());
     assert_eq!(
       signed,
-      "---\nsigner: bob.alice.eth\nsignature: 0xabc123\n---\n# Title\n"
+      "---\nsigner: bob.alice.eth\nsignature: \"0xabc123\"\n---\n# Title\n"
     );
     assert_eq!(body_digest(&signed), body_digest(markdown));
   }
@@ -358,7 +360,7 @@ mod tests {
     let signed = write_signature("One\r\nTwo\r\n", &fields());
     assert_eq!(
       signed,
-      "---\r\nsigner: bob.alice.eth\r\nsignature: 0xabc123\r\n---\r\n\
+      "---\r\nsigner: bob.alice.eth\r\nsignature: \"0xabc123\"\r\n---\r\n\
        One\r\nTwo\r\n"
     );
   }
@@ -370,7 +372,7 @@ mod tests {
     assert_eq!(
       signed,
       "---\ntitle: A\ntags:\n  - x\nsigner: bob.alice.eth\n\
-       signature: 0xabc123\n---\nBody\n"
+       signature: \"0xabc123\"\n---\nBody\n"
     );
   }
 
@@ -381,7 +383,7 @@ mod tests {
     let signed = write_signature(markdown, &fields());
     assert_eq!(
       signed,
-      "---\nsigner: bob.alice.eth\ntitle: A\nsignature: 0xabc123\n\
+      "---\nsigner: bob.alice.eth\ntitle: A\nsignature: \"0xabc123\"\n\
        date: 2026\n---\nBody\n"
     );
   }
@@ -392,7 +394,7 @@ mod tests {
     let signed = write_signature(markdown, &fields());
     assert_eq!(
       signed,
-      "---\r\ntitle: A\r\nsigner: bob.alice.eth\r\nsignature: 0xabc123\r\n\
+      "---\r\ntitle: A\r\nsigner: bob.alice.eth\r\nsignature: \"0xabc123\"\r\n\
        ---\r\nBody\r\n"
     );
   }
