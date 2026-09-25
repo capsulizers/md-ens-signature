@@ -2,3 +2,4 @@
 //! permissions.
 
 pub mod document;
+pub mod signature;
