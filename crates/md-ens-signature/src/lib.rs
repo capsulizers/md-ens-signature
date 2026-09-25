@@ -4,3 +4,4 @@
 pub mod document;
 pub mod ens;
 pub mod signature;
+pub mod verify;
