@@ -4,7 +4,7 @@ import { customElement } from "lit/decorators.js";
 
 import { TEXT } from "#constants";
 import {
-  createMockEngines,
+  createEngines,
   EMPTY_SETTINGS_CONTEXT,
   type Engines,
   enginesContext,
@@ -62,7 +62,7 @@ export class RootElement extends LitElement {
   `;
 
   @provide({ context: enginesContext })
-  accessor #engines: Engines = createMockEngines((): void => {
+  accessor #engines: Engines = createEngines((): void => {
     this.#engines = { ...this.#engines, revision: this.#engines.revision + 1 };
   });
 
