@@ -9,7 +9,7 @@ use std::fmt;
 
 use alloy_primitives::Address;
 
-use crate::document::{body_digest, read_signature};
+use crate::document::{SignatureFields, body_digest, read_signature};
 use crate::ens::{EthCall, decode_find_owner, find_owner_call};
 use crate::signature::recover;
 
@@ -106,9 +106,23 @@ pub async fn verify<C: EthCaller>(
   let Some(fields) = read_signature(markdown) else {
     return Ok(Verdict::Unsigned);
   };
+  verify_fields(&fields, &body_digest(markdown), trusted_parent, caller).await
+}
+
+/// Runs [`verify`] from steps 2 on, for a file whose signature fields and
+/// body digest the caller already has.
+///
+/// Hashing the body is most of the work for a large file, so an embedder
+/// that also keys a cache on the digest passes it here instead of having
+/// [`verify`] hash the body a second time.
+pub async fn verify_fields<C: EthCaller>(
+  fields: &SignatureFields,
+  body_digest: &[u8; 32],
+  trusted_parent: Option<&str>,
+  caller: &C,
+) -> anyhow::Result<Verdict> {
   let signer = fields.signer.trim().to_lowercase();
-  let digest = body_digest(markdown);
-  let Ok(recovered) = recover(&fields.signature, &signer, &digest) else {
+  let Ok(recovered) = recover(&fields.signature, &signer, body_digest) else {
     return Ok(Verdict::Tampered { signer });
   };
   let unregistered = Verdict::Unauthorized {
@@ -151,8 +165,10 @@ mod tests {
   use alloy_primitives::{Address, hex};
   use anyhow::{anyhow, bail};
 
-  use super::{EthCaller, Reason, Verdict, verify};
-  use crate::document::{SignatureFields, body_digest, write_signature};
+  use super::{EthCaller, Reason, Verdict, verify, verify_fields};
+  use crate::document::{
+    SignatureFields, body_digest, read_signature, write_signature,
+  };
   use crate::ens::{EthCall, find_owner_call};
   use crate::signature::{address_of, sign};
 
@@ -240,6 +256,22 @@ mod tests {
     };
     assert_eq!(verdict, expected);
     assert_eq!(*caller.asked.borrow(), [find_owner_call(SIGNER)?.data]);
+    Ok(())
+  }
+
+  #[test]
+  fn known_digest_gives_the_same_verdicts() -> anyhow::Result<()> {
+    let caller = owned_by_key()?;
+    let good = signed(&KEY, SIGNER)?;
+    let edited = good.replace("sell high", "sell higher");
+    for markdown in [&good, &edited] {
+      let fields = read_signature(markdown).ok_or(anyhow!("unsigned"))?;
+      let digest = body_digest(markdown);
+      assert_eq!(
+        run(verify_fields(&fields, &digest, None, &caller))??,
+        run(verify(markdown, None, &caller))??,
+      );
+    }
     Ok(())
   }
 
