@@ -12,11 +12,16 @@ import {
   type SettingsContext,
   settingsContext,
   type SettingsPatch,
+  type WalletContext,
+  walletContext,
 } from "#context";
+import { hasWallet, switchToSepolia, type WalletState } from "#engine";
 
 import "./document-panel.ts";
 import "./permissions-panel.ts";
 import "./settings-row.ts";
+import "./wallet-button.ts";
+import { WalletController } from "./wallet-controller.ts";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -50,6 +55,14 @@ export class RootElement extends LitElement {
       }
     }
 
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: start;
+      gap: var(--wa-space-m);
+    }
+
     h1 {
       margin: 0;
       font-size: var(--wa-font-size-2xl);
@@ -66,6 +79,11 @@ export class RootElement extends LitElement {
     this.#engines = { ...this.#engines, revision: this.#engines.revision + 1 };
   });
 
+  #walletController = new WalletController(this);
+
+  @provide({ context: walletContext })
+  accessor #wallet: WalletContext = this.#listenToWallet();
+
   @provide({ context: settingsContext })
   accessor #settings: SettingsContext = this.#buildSettings(
     EMPTY_SETTINGS_CONTEXT.settings,
@@ -74,8 +92,11 @@ export class RootElement extends LitElement {
   override render(): TemplateResult {
     return html`
       <header>
-        <h1>${TEXT.title}</h1>
-        <p>${TEXT.subtitle}</p>
+        <div>
+          <h1>${TEXT.title}</h1>
+          <p>${TEXT.subtitle}</p>
+        </div>
+        <md-wallet-button></md-wallet-button>
       </header>
       <md-settings-row></md-settings-row>
       <div class="panels">
@@ -83,6 +104,23 @@ export class RootElement extends LitElement {
         <md-permissions-panel></md-permissions-panel>
       </div>
     `;
+  }
+
+  /** Rebuilds the wallet context on every change, starting disconnected. */
+  #listenToWallet(): WalletContext {
+    this.#walletController.listen((state: WalletState): void => {
+      this.#wallet = this.#buildWallet(state);
+    });
+    return this.#buildWallet({ account: null, chainId: null });
+  }
+
+  #buildWallet(state: WalletState): WalletContext {
+    return {
+      isAvailable: hasWallet(),
+      state,
+      connect: (): Promise<void> => this.#walletController.connect(),
+      switchChain: switchToSepolia,
+    };
   }
 
   #buildSettings(settings: Settings): SettingsContext {

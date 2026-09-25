@@ -6,3 +6,4 @@ export * from "./root.ts";
 export * from "./settings-row.ts";
 export * from "./sign-actions.ts";
 export * from "./verdict-badge.ts";
+export * from "./wallet-button.ts";
