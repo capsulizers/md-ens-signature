@@ -4,6 +4,7 @@
 //! through `tracing` to standard error.
 
 mod inspect;
+mod sign;
 
 use std::io::IsTerminal;
 use std::process::ExitCode;
@@ -21,6 +22,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+  Sign(sign::Args),
   Inspect(inspect::Args),
 }
 
@@ -33,6 +35,7 @@ fn main() -> ExitCode {
     .init();
   let cli = Cli::parse();
   let result = match cli.command {
+    Command::Sign(args) => sign::run(&args),
     Command::Inspect(args) => inspect::run(&args),
   };
   result.unwrap_or_else(|error| {
