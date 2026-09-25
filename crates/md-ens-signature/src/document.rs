@@ -124,8 +124,44 @@ pub fn canonical_body(markdown: &str) -> String {
 }
 
 /// Returns the SHA-256 digest of the canonical body.
+///
+/// The body is hashed where it lies rather than copied into its canonical
+/// form first, so a large file costs one pass and no allocation: the
+/// trailing whitespace is cut off by position, and each CRLF is fed to the
+/// hasher as LF.
 pub fn body_digest(markdown: &str) -> [u8; 32] {
-  Sha256::digest(canonical_body(markdown).as_bytes()).into()
+  let body = body(markdown);
+  let mut rest = &body[..trimmed_end(body)];
+  let mut hasher = Sha256::new();
+  while let Some((head, tail)) = rest.split_once('\r') {
+    hasher.update(head);
+    rest = match tail.strip_prefix('\n') {
+      Some(after) => {
+        hasher.update("\n");
+        after
+      }
+      None => {
+        hasher.update("\r");
+        tail
+      }
+    };
+  }
+  hasher.update(rest);
+  hasher.finalize().into()
+}
+
+/// Returns where the canonical body ends within the raw body: before the
+/// trailing spaces, tabs, and line endings that [`canonical_body`] trims. A
+/// CRLF goes as one ending, while a lone CR is text and stops the trim.
+fn trimmed_end(body: &str) -> usize {
+  let mut rest = body;
+  while let Some(shorter) = rest
+    .strip_suffix("\r\n")
+    .or_else(|| rest.strip_suffix([' ', '\t', '\n']))
+  {
+    rest = shorter;
+  }
+  rest.len()
 }
 
 /// Reads the signature fields from the frontmatter.
@@ -234,6 +270,7 @@ mod tests {
     SignatureFields, body_digest, canonical_body, read_signature,
     remove_signature, write_signature,
   };
+  use sha2::{Digest, Sha256};
 
   const SIGNATURE: &str = "0xabc123";
 
@@ -316,6 +353,54 @@ mod tests {
       0xb4, 0x10, 0xff, 0x61, 0xf2, 0x00, 0x15, 0xad,
     ];
     assert_eq!(body_digest("---\nsigner: a.eth\n---\nabc\n"), expected);
+  }
+
+  #[test]
+  fn streamed_digest_equals_canonical_digest_for_every_short_body() {
+    let alphabet = ['a', ' ', '\t', '\r', '\n'];
+    let mut bodies = vec![String::new()];
+    for _ in 0..6 {
+      let longer: Vec<String> = bodies
+        .iter()
+        .flat_map(|body| alphabet.map(|letter| format!("{body}{letter}")))
+        .collect();
+      for body in &longer {
+        let markdown = format!("---\r\n---\r\n{body}");
+        let canonical: [u8; 32] =
+          Sha256::digest(canonical_body(&markdown).as_bytes()).into();
+        assert_eq!(body_digest(&markdown), canonical, "{markdown:?}");
+      }
+      bodies = longer;
+    }
+  }
+
+  #[test]
+  fn streamed_digest_equals_digest_of_canonical_body() {
+    let bodies = [
+      "",
+      "\n",
+      "\r\n",
+      "\r",
+      " \t\r\n \n",
+      "Text",
+      "One\r\nTwo\r\n",
+      "Lone\rCR\r",
+      "Lone CR before CRLF\r\r\n",
+      "CR then spaces\r  \t",
+      "\r\r\n\n\r",
+      "Mixed\r\nLF\nCR\rend \r\n\t\n",
+      "Tab inside\tand after\t\t",
+      "Multibyte 名前 \u{a0}\r\n",
+      "Trailing no-break space\u{a0}",
+    ];
+    for body in bodies {
+      for head in ["", "---\ntitle: A\n---\n", "---\r\na: b\r\n---\r\n"] {
+        let markdown = format!("{head}{body}");
+        let canonical: [u8; 32] =
+          Sha256::digest(canonical_body(&markdown).as_bytes()).into();
+        assert_eq!(body_digest(&markdown), canonical, "{markdown:?}");
+      }
+    }
   }
 
   #[test]
