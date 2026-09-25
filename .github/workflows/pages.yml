@@ -32,8 +32,8 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: wasm-bindgen@0.2.108
-      - run: deno install
       - run: deno task build-wasm
+      - run: deno install
       - run: deno task build
         env:
           MDSIG_BASE: /md-ens-signature/
