@@ -6,7 +6,7 @@ import { registerIconLibrary } from "@awesome.me/webawesome/dist/components/icon
  * one falls back to the question mark glyph.
  */
 const ICON_SOURCES = import.meta.glob<string>(
-  "../node_modules/bootstrap-icons/icons/{question-diamond,pen}.svg",
+  "../node_modules/bootstrap-icons/icons/{file-earmark,folder2-open,hourglass-split,patch-check-fill,question-diamond,shield-exclamation,x-octagon-fill}.svg",
   {
     eager: true,
     import: "default",
