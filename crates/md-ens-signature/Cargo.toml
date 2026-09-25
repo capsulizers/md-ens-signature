@@ -8,3 +8,6 @@ repository.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+sha2 = { version = "0.10", default-features = false }
