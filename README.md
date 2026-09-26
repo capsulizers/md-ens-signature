@@ -4,6 +4,9 @@ Sign Markdown files with an ENS name, and verify them against ENSv2 permissions.
 
 **Live page:** https://capsulizers.github.io/mdtp/
 
+**Spec:** [`docs/spec.md`](docs/spec.md), also on the live page's
+[Spec tab](https://capsulizers.github.io/mdtp/#spec).
+
 ## The problem
 
 AI agents execute Markdown: skills, prompts, and notes that tell them what to

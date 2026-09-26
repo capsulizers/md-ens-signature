@@ -11,6 +11,8 @@ const BASE = Deno.env.get("MDSIG_BASE") ?? "/";
 export default defineConfig({
   base: BASE,
   clearScreen: false,
+  // The Spec tab bundles docs/spec.md from the repository root.
+  server: { fs: { allow: [".."] } },
   build: {
     assetsInlineLimit: 0,
     rollupOptions: {

@@ -1,5 +1,5 @@
 /** The tabs the page has, named as their panels are. */
-export type Tab = "SIGN" | "PUBLISH" | "READ";
+export type Tab = "SIGN" | "PUBLISH" | "READ" | "SPEC";
 
 /** Where the page is: its tab and the published name being read. */
 export interface Route {
@@ -66,5 +66,6 @@ export function isReadHash(href: string): boolean {
 
 /** Whether `tab` names one of the page's tabs. */
 export function isTab(tab: string): tab is Tab {
-  return tab === "SIGN" || tab === "PUBLISH" || tab === "READ";
+  return tab === "SIGN" || tab === "PUBLISH" || tab === "READ" ||
+    tab === "SPEC";
 }
