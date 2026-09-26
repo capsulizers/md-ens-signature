@@ -77,6 +77,10 @@ calldata is the file, and a `setText` of the document name's `mdtp` record to
 | `skills.mdsig91205.eth` record points at it | 11785179 | [0xf683bca5…](https://sepolia.etherscan.io/tx/0xf683bca5c201fe4b80629b872ce3c9356c663f16d69956e73c6ab24b5516b5dc) |
 | SKILL v2 content, claimed publisher `ghost.mdsig91205.eth` (unregistered), 2026-09-26T08:55:48Z | 11785184 | [0xc84b8a54…](https://sepolia.etherscan.io/tx/0xc84b8a54f315ef51d35bbaf795fea57912e5119c729bf419f09ac0ea4f3b027a) |
 | `ghost.mdsig91205.eth` record points at it | 11785184 | [0x32fbc4d4…](https://sepolia.etherscan.io/tx/0x32fbc4d45b048b1f533bb9f3e6eb6006f728b3b2c3c66d7d07fa5a11debce9b3) |
+| Welcome page content, publisher `mdsig91205.eth`, 2026-09-26T09:20:36Z | 11785308 | [0x1f79193a…](https://sepolia.etherscan.io/tx/0x1f79193ac5b1c55c6791ab47e10a5f3245fe8583a42a957ae09a684c0404f924) |
+| `welcome.mdsig91205.eth` record points at it, 2026-09-26T09:20:48Z | 11785309 | [0xad5cf3a9…](https://sepolia.etherscan.io/tx/0xad5cf3a9dfe2da938aaed48458edcdb4e75f0ff74ac41ddaa778292a154c26d7) |
+| Memona page content, publisher `mdsig91205.eth`, 2026-09-26T10:24:48Z | 11785629 | [0xc925f206…](https://sepolia.etherscan.io/tx/0xc925f2065966788a0933bef8c96b2c21bc562539dfa5865143b1b205b3d8feaf) |
+| `memona.mdsig91205.eth` record points at it | 11785629 | [0xb8cab845…](https://sepolia.etherscan.io/tx/0xb8cab8458a74f6dd0b936507857354ee5384abeae1a766ee4ca56037ed534649) |
 
 `mdsig read skills.mdsig91205.eth` gives Verified: the sender is Alice, who
 owns `mdsig91205.eth`, and the Markdown is byte-identical to
@@ -84,6 +88,26 @@ owns `mdsig91205.eth`, and the Markdown is byte-identical to
 Unauthorized: no one owns `ghost.mdsig91205.eth`, so `findOwner` returns the
 zero address even though the sender could write the record. The ghost record
 lives on the parent's resolver through its wildcard fallback.
+
+Every transaction in this table was sent by Alice. The rows are the
+resolver's `TextChanged` logs for the `mdtp` key, each with the content
+transaction its record names.
+
+### Publish rights for Eric and Tom
+
+Alice owns `skills.mdsig91205.eth`, so only she could set its record. She
+gave the demo members the right to set its `mdtp` text record, and nothing
+else, with `authorizeTextRoles(dns(skills.mdsig91205.eth), "mdtp", member,
+true)` on the PermissionedResolver. Eric and Tom are subnames of the
+document's parent, so their publications read as Verified.
+
+| What | Sender | Block | Time (UTC) | Transaction |
+| --- | --- | --- | --- | --- |
+| Alice lets Eric `0xA2fD38B9FFbC6E3114670EFA6f6FB82976d31867` set `mdtp` | Alice | 11785905 | 2026-09-26T11:21:12Z | [0x303ef182…](https://sepolia.etherscan.io/tx/0x303ef18297a8441c2a589bc5ee3e6394fe78bc9f129efc089b18ad0e9981247c) |
+| Alice lets Tom `0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c` set `mdtp` | Alice | 11785907 | 2026-09-26T11:21:36Z | [0x6d69a732…](https://sepolia.etherscan.io/tx/0x6d69a732085b79f0339ad59330bdabf1b4e524334f090e38fad5e9ec680f09a8) |
+
+After both, `mdsig read skills.mdsig91205.eth` still gives Verified with
+the same SKILL v2 transaction: granting a right does not change the record.
 
 ## Test team `mdsigteam6488.eth`
 
@@ -102,3 +126,13 @@ These were `eth_call` simulations at block 11783225. No transaction was sent.
 
 - Eric calling `unregister(tom)` would succeed.
 - Tom calling `unregister(eric)` reverts, because Tom holds no registry role.
+
+These were `eth_call` simulations of `setText(namehash(skills.mdsig91205.eth),
+"mdtp", <current record>)` on the PermissionedResolver. No transaction was
+sent.
+
+- Before the grants (block 11785904): Eric, Tom and Mallory
+  `0x756244CcE2fA5a5c33Ce1631E856dCd02BD6CEf9` all revert with error
+  `0x4b27a133`.
+- After the grants (block 11785907): Eric and Tom would succeed; Mallory
+  still reverts.
