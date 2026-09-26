@@ -30,10 +30,13 @@ both.
    - Trusted parent `mdsig91205.eth`
    - Allowed hosts `127.0.0.1` and `ethereum-sepolia-rpc.publicnode.com`
      (host names only, no port), Private network on
+   - Agent access: Read only. With Off, the agent cannot see the connection.
    - Save, then press Reconnect if the connection shows Disconnected.
 4. Helen's own workspace folder (local, not the shared folder) holds
-   `tokens.tsv`, an empty `outputs/`, and the agent rule file that
-   makes the agent stop on anything but Verified. See "Verdict gate" below.
+   `tokens.tsv`, an empty `outputs/`, and the two files from
+   `examples/demo/helen-workspace/`: `AGENTS.md` (the rule) and `CLAUDE.md`
+   (which makes Claude Code load it). Pin the Folder Agent's model to Opus;
+   smaller models followed the rule too, but Opus quoted verdicts cleanest.
 5. From `examples/demo/` in this repository: `SKILL-v1.md`, `SKILL-v2.md`,
    `SKILL-v3.md` and `tokens.tsv`.
 6. Check on the live page that Permissions shows `eric` and `tom` as Granted.
