@@ -58,6 +58,11 @@ right to add and revoke members.
 Bob, carol and qa were test members during development. The demo members are
 `eric` and `tom`, and Eric holds the two member roles.
 
+The same grant was sent a second time by mistake, when a setup script was
+rerun: [0x66cbf595…](https://sepolia.etherscan.io/tx/0x66cbf595a7c2ae30a39bc84261d3b9457effd6d6439e4cd251751b9d8bd2571d),
+block 11783241, from Alice. Eric already held both roles, so it emitted no
+event and changed nothing.
+
 ## Simulations
 
 These were `eth_call` simulations at block 11783225. No transaction was sent.
