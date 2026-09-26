@@ -3,3 +3,6 @@ export const DEFAULT_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com";
 
 /** The parent ENS name whose members may sign, registered for the demo. */
 export const DEFAULT_PARENT_NAME = "mdsig91205.eth";
+
+/** The published document the Read tab offers to open, set up for the demo. */
+export const EXAMPLE_DOCUMENT_NAME = "skills.mdsig91205.eth";

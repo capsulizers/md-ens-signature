@@ -4,17 +4,20 @@ import {
   ChainPermissionsEngine,
   ChainTeamEngine,
   type PermissionsEngine,
+  type PublishEngine,
   SepoliaClients,
   type SignatureEngine,
   type TeamEngine,
+  WasmPublishEngine,
   WasmSignatureEngine,
 } from "#engine";
 
-/** The engines the page signs, verifies, and grants with. */
+/** The engines the page signs, verifies, grants, and reads with. */
 export interface Engines {
   signature: SignatureEngine;
   permissions: PermissionsEngine;
   team: TeamEngine;
+  publish: PublishEngine;
   /** Bumped after a permission change confirms, so readers check again. */
   revision: number;
   /** Tells every reader that a permission change has confirmed. */
@@ -31,6 +34,7 @@ export function createEngines(notifyChanged: () => void): Engines {
     signature: new WasmSignatureEngine(),
     permissions: new ChainPermissionsEngine(clients),
     team: new ChainTeamEngine(clients),
+    publish: new WasmPublishEngine(),
     revision: 0,
     notifyChanged,
   };
