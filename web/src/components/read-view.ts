@@ -1,4 +1,5 @@
 import "@awesome.me/webawesome/dist/components/button/button.js";
+import "@awesome.me/webawesome/dist/components/callout/callout.js";
 import "@awesome.me/webawesome/dist/components/icon/icon.js";
 import "@awesome.me/webawesome/dist/components/input/input.js";
 import "@awesome.me/webawesome/dist/components/spinner/spinner.js";
@@ -15,7 +16,7 @@ import {
   type SettingsContext,
   settingsContext,
 } from "#context";
-import type { Publication, Verdict } from "#engine";
+import type { Publication, Verdict, Version } from "#engine";
 import {
   documentName,
   mdtpLink,
@@ -26,6 +27,7 @@ import {
 
 import "./markdown-view.ts";
 import "./verdict-badge.ts";
+import "./version-list.ts";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -57,6 +59,34 @@ interface UnreachableState {
   kind: "UNREACHABLE";
 }
 
+/** Where reading the document's versions stands. */
+type VersionsState =
+  | VersionsLoadingState
+  | VersionsLoadedState
+  | VersionsFailedState;
+
+/** The versions are being read from Sepolia. */
+interface VersionsLoadingState {
+  kind: "LOADING";
+}
+
+/** The versions were read, newest first. */
+interface VersionsLoadedState {
+  kind: "LOADED";
+  versions: Version[];
+}
+
+/** The Sepolia node did not answer for the versions. */
+interface VersionsFailedState {
+  kind: "FAILED";
+}
+
+/** An older version shown in place of the current one, and its reading. */
+interface OlderVersion {
+  version: Version;
+  state: ReadState;
+}
+
 /** The signature verdict the badge shows when the node did not answer. */
 const UNREACHABLE: Verdict = { kind: "unreachable" };
 
@@ -86,6 +116,14 @@ export class ReadViewElement extends LitElement {
     .status {
       color: var(--wa-color-text-quiet);
       font-size: var(--wa-font-size-s);
+    }
+
+    .older {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--wa-space-s);
     }
 
     .open {
@@ -148,6 +186,13 @@ export class ReadViewElement extends LitElement {
   @state()
   accessor #state: ReadState = { kind: "IDLE" };
 
+  @state()
+  accessor #versions: VersionsState = { kind: "LOADING" };
+
+  /** The older version shown instead of the current one, or null. */
+  @state()
+  accessor #older: OlderVersion | null = null;
+
   /** Bumped per read, so an answer for an older name is dropped. */
   #request = 0;
 
@@ -200,16 +245,101 @@ export class ReadViewElement extends LitElement {
     }
   }
 
-  #renderPublication(publication: Publication): TemplateResult {
+  #renderPublication(current: Publication): TemplateResult {
+    const older = this.#older;
+    const open = this.#renderOpenInMemona(current);
+    const versions = this.#renderVersions();
+    if (older === null) {
+      const extras = html`
+        ${versions} ${open}
+      `;
+      return this.#renderDocument(current, extras);
+    }
+    const time = utcTime(older.version.timestamp);
+    const olderText = TEXT.olderVersion(time);
+    const note = html`
+      <wa-callout variant="warning" appearance="outlined">
+        <wa-icon slot="icon" name="clock-history"></wa-icon>
+        <div class="older">
+          <span>${olderText}</span>
+          <wa-button size="small" @click=${this.#showCurrent}>
+            <wa-icon slot="start" name="arrow-left"></wa-icon>
+            ${TEXT.olderVersionBack}
+          </wa-button>
+        </div>
+      </wa-callout>
+    `;
+    const state = older.state;
+    switch (state.kind) {
+      case "IDLE":
+      case "READING":
+        return html`
+          ${note}
+          <div class="status" role="status">
+            <wa-spinner></wa-spinner>
+            ${TEXT.readingVersion}
+          </div>
+          ${versions}
+        `;
+      case "UNREACHABLE":
+        return html`
+          ${note}
+          <md-verdict-badge .verdict=${UNREACHABLE}></md-verdict-badge>
+          ${versions}
+        `;
+      case "READ": {
+        const document = this.#renderDocument(state.publication, versions);
+        return html`
+          ${note} ${document}
+        `;
+      }
+    }
+  }
+
+  /** The verdict, facts, `extras` such as the versions, and the body. */
+  #renderDocument(
+    publication: Publication,
+    extras: TemplateResult,
+  ): TemplateResult {
     const body = publication.markdown === "" ? html`` : html`
       <md-markdown-view .markdown=${publication.markdown}></md-markdown-view>
     `;
     const facts = this.#renderFacts(publication);
-    const open = this.#renderOpenInMemona(publication);
     return html`
       <md-verdict-badge .publication=${publication}></md-verdict-badge>
-      ${facts} ${open} ${body}
+      ${facts} ${extras} ${body}
     `;
+  }
+
+  /** The document's versions, newest first, once read. */
+  #renderVersions(): TemplateResult {
+    const state = this.#versions;
+    switch (state.kind) {
+      case "LOADING":
+        return html`
+          <div class="status" role="status">
+            <wa-spinner></wa-spinner>
+            ${TEXT.versionsLoading}
+          </div>
+        `;
+      case "FAILED":
+        return html`
+          <div class="status">${TEXT.versionsFailed}</div>
+        `;
+      case "LOADED": {
+        if (state.versions.length === 0) {
+          return html``;
+        }
+        const shown = this.#older?.version ?? state.versions[0] ?? null;
+        return html`
+          <md-version-list
+            .versions=${state.versions}
+            .shown=${shown}
+            @version-select=${this.#onVersionSelect}
+          ></md-version-list>
+        `;
+      }
+    }
   }
 
   /** A link to the same document in the Memona app, through the OS. */
@@ -258,6 +388,41 @@ export class ReadViewElement extends LitElement {
     `;
   }
 
+  /** Shows the chosen version, or the current one for the newest. */
+  #onVersionSelect(event: CustomEvent<Version>): void {
+    const version = event.detail;
+    const state = this.#versions;
+    const isNewest = state.kind === "LOADED" && state.versions[0] === version;
+    if (isNewest || version.txHash === null) {
+      this.#showCurrent();
+      return;
+    }
+    this.#older = { version, state: { kind: "READING" } };
+    void this.#fetchVersion(this.#request, version, version.txHash);
+  }
+
+  #showCurrent(): void {
+    this.#older = null;
+  }
+
+  async #fetchVersion(
+    request: number,
+    version: Version,
+    txHash: string,
+  ): Promise<void> {
+    const publication = await this.#engines.publish.readVersion(
+      this.name,
+      txHash,
+      this.#settings.settings.rpcUrl,
+    );
+    if (request === this.#request && this.#older?.version === version) {
+      const state: ReadState = publication === null
+        ? { kind: "UNREACHABLE" }
+        : { kind: "READ", publication };
+      this.#older = { version, state };
+    }
+  }
+
   /** Moves the page to the name typed, which reads it through the route. */
   #onSubmit(event: SubmitEvent): void {
     event.preventDefault();
@@ -285,7 +450,22 @@ export class ReadViewElement extends LitElement {
       return;
     }
     this.#state = { kind: "READING" };
+    this.#versions = { kind: "LOADING" };
+    this.#older = null;
     void this.#fetch(this.#request, this.name);
+    void this.#fetchVersions(this.#request, this.name);
+  }
+
+  async #fetchVersions(request: number, name: string): Promise<void> {
+    const versions = await this.#engines.publish.versions(
+      name,
+      this.#settings.settings.rpcUrl,
+    );
+    if (request === this.#request) {
+      this.#versions = versions === null
+        ? { kind: "FAILED" }
+        : { kind: "LOADED", versions };
+    }
   }
 
   async #fetch(request: number, name: string): Promise<void> {
