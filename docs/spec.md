@@ -119,11 +119,32 @@ write only this record with
   Only `mdsig91205.eth` itself may publish `mdsig91205.eth`.
 - **Unauthorized** otherwise, for example after the publisher name is revoked.
 
+### Versions
+
+Every publish sets the record again, so the record's history is the document's
+history. The resolver emits
+`TextChanged(bytes32 indexed node, string indexed indexedKey, string key, string value)`
+for each `setText`; the versions of a name are those logs with
+`node = namehash(name)` and `indexedKey = "mdtp"`, newest first, each dated by
+its block's timestamp in UTC. Readers fetch the logs backwards in chunks of
+50,000 blocks, down to the ENSv2 deployment block 11,163,403. An older version
+is read from its recorded transaction and judged by the same rule as the current
+one, and a reader marks it as older.
+
 ### Links
 
 A published document links to another as `mdtp://<name>`, such as
 `mdtp://skills.mdsig91205.eth`. Readers open it by reading that name. Relative
 links inside a published file are not supported in version 1.
+
+### Reading in Memona
+
+Memona 2.0.0-alpha.44 and later open published documents natively. Type
+`mdtp://<name>` in a panel's path bar, click an `mdtp://` link in any Markdown
+file, or open an `mdtp://` link anywhere in the operating system, which
+registers Memona as the scheme's handler. The document shows read-only, with the
+verdict, publisher, and published time in its frontmatter row. Reading needs no
+wallet or key.
 
 ### Media
 
