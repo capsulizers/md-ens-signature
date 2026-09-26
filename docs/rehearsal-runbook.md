@@ -4,7 +4,7 @@ For the 17:00 rehearsal. Sepolia (chain 11155111). Parent name `mdsig91205.eth`.
 
 | Role | Who | Wallet | Tool |
 | --- | --- | --- | --- |
-| Eric | team admin, owns `eric.mdsig91205.eth`, may add and revoke members | `0xA2fD38B9FFbC6E3114670EFA6f6FB82976d31867` | [live page](https://capsulizers.github.io/md-ens-signature/) + MetaMask |
+| Eric | team admin, owns `eric.mdsig91205.eth`, may add and revoke members | `0xA2fD38B9FFbC6E3114670EFA6f6FB82976d31867` | [live page](https://cunarist.github.io/mdtp/) + MetaMask |
 | Tom | member, owns `tom.mdsig91205.eth` | `0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c` | live page + MetaMask |
 | Helen | Memona user, no wallet | none | Memona, the Signature plugin and the Folder Agent |
 

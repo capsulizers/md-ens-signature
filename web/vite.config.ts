@@ -4,7 +4,7 @@ import denoJson from "./deno.json" with { type: "json" };
 
 /**
  * The URL path the page is served under. GitHub Pages serves a project site
- * at `/<repository>/`, so a Pages build sets `MDSIG_BASE=/md-ens-signature/`.
+ * at `/<repository>/`, so a Pages build sets `MDSIG_BASE=/mdtp/`.
  */
 const BASE = Deno.env.get("MDSIG_BASE") ?? "/";
 
