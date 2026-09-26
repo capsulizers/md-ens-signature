@@ -34,7 +34,7 @@ export function createEngines(notifyChanged: () => void): Engines {
     signature: new WasmSignatureEngine(),
     permissions: new ChainPermissionsEngine(clients),
     team: new ChainTeamEngine(clients),
-    publish: new WasmPublishEngine(),
+    publish: new WasmPublishEngine(clients),
     revision: 0,
     notifyChanged,
   };

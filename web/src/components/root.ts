@@ -24,6 +24,7 @@ import { isTab, parseRoute, type Route, routeHash } from "#utils";
 
 import "./document-panel.ts";
 import "./permissions-panel.ts";
+import "./publish-view.ts";
 import "./read-view.ts";
 import { RouteController } from "./route-controller.ts";
 import "./settings-row.ts";
@@ -132,6 +133,7 @@ export class RootElement extends LitElement {
       <md-settings-row></md-settings-row>
       <wa-tab-group active=${this.#route.tab} @wa-tab-show=${this.#onTabShow}>
         <wa-tab panel="SIGN">${TEXT.signTab}</wa-tab>
+        <wa-tab panel="PUBLISH">${TEXT.publishTab}</wa-tab>
         <wa-tab panel="READ">${TEXT.readTab}</wa-tab>
         <wa-tab-panel name="SIGN">
           <div class="panels">
@@ -141,6 +143,9 @@ export class RootElement extends LitElement {
               <md-team-wizard></md-team-wizard>
             </div>
           </div>
+        </wa-tab-panel>
+        <wa-tab-panel name="PUBLISH">
+          <md-publish-view></md-publish-view>
         </wa-tab-panel>
         <wa-tab-panel name="READ">
           <md-read-view .name=${this.#route.name}></md-read-view>

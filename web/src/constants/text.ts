@@ -5,6 +5,7 @@ export const TEXT = {
   subtitle:
     "An ENS name decides who may write. Sign a file to catch any forgery, or publish it to Sepolia where nobody can forge or delete it.",
   signTab: "Sign",
+  publishTab: "Publish",
   readTab: "Read",
   connectWallet: "Connect wallet",
   switchToSepolia: "Switch to Sepolia",
@@ -114,4 +115,29 @@ export const TEXT = {
   publishedAtLabel: "Published",
   transactionLabel: "Transaction",
   frontmatterLabel: "Frontmatter",
+  publishTitle: "Publish to Ethereum",
+  publishSubtitle:
+    "Two transactions from your wallet: the file itself, sent to your own address, then the document name's mdtp record pointed at it. Nobody can forge or delete it after that.",
+  documentNameLabel: "Document name",
+  documentNamePlaceholder: "skills.mdsig91205.eth",
+  publishAsLabel: "Publish as",
+  publisherPlaceholder: "mdsig91205.eth",
+  publish: "Publish",
+  fileStep: "1. The file, sent to your own address",
+  recordStep: "2. The name's mdtp record",
+  publishConnect: "Connect a wallet to publish.",
+  publishSwitch: "Switch the wallet to Sepolia to publish.",
+  publishChecking: "Checking what this wallet may publish",
+  publishUnreachable: "The Sepolia RPC endpoint did not answer.",
+  publishNotAllowed: (publisher: string, name: string): string =>
+    `${publisher} may not publish ${name}. Publish as the name itself, one of its parents, or a member of its parent.`,
+  publishNotOwner: (publisher: string): string =>
+    `This wallet does not own ${publisher}.`,
+  publishNoResolver: (name: string): string =>
+    `${name} has no resolver to hold the mdtp record.`,
+  publishDenied: (name: string): string =>
+    `This wallet may not set the mdtp record of ${name}. The owner of its parent can allow it with authorizeTextRoles.`,
+  publishedTitle: "Published",
+  publishedShare: "Share this link; anyone can read it without a wallet:",
+  copyLink: "Copy link",
 };
