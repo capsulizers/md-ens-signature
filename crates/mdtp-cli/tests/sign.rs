@@ -1,4 +1,4 @@
-//! Runs `mdsig sign`, then `mdsig inspect` on what it wrote.
+//! Runs `mdtp sign`, then `mdtp inspect` on what it wrote.
 
 use std::fs;
 use std::path::Path;
@@ -11,24 +11,24 @@ const KEY: &str =
 const ADDRESS: &str = "0x2c7536E3605D9C16a7a3D7b1898e529396a65c23";
 const BODY: &str = "---\ntitle: Note\n---\n# Note\n\nBuy low, sell high.\n";
 
-fn mdsig() -> anyhow::Result<Command> {
-  let mut command = Command::cargo_bin("mdsig")?;
-  command.env_remove("MDSIG_PRIVATE_KEY");
+fn mdtp() -> anyhow::Result<Command> {
+  let mut command = Command::cargo_bin("mdtp")?;
+  command.env_remove("MDTP_PRIVATE_KEY");
   Ok(command)
 }
 
 fn sign(path: &Path) -> anyhow::Result<String> {
-  let output = mdsig()?
+  let output = mdtp()?
     .args(["sign", "--signer", "Bob.Alice.eth"])
     .arg(path)
-    .env("MDSIG_PRIVATE_KEY", KEY)
+    .env("MDTP_PRIVATE_KEY", KEY)
     .output()?;
   assert!(output.status.success());
   Ok(String::from_utf8(output.stdout)?)
 }
 
 fn inspect(path: &Path) -> anyhow::Result<(Option<i32>, String)> {
-  let output = mdsig()?.arg("inspect").arg(path).output()?;
+  let output = mdtp()?.arg("inspect").arg(path).output()?;
   Ok((output.status.code(), String::from_utf8(output.stdout)?))
 }
 
@@ -73,7 +73,7 @@ fn output_leaves_the_input_untouched() -> anyhow::Result<()> {
   let input = dir.path().join("note.md");
   let output = dir.path().join("signed.md");
   fs::write(&input, BODY)?;
-  mdsig()?
+  mdtp()?
     .args([
       "sign",
       "--signer",
@@ -98,11 +98,11 @@ fn missing_or_bad_key_fails_without_writing() -> anyhow::Result<()> {
   let path = dir.path().join("note.md");
   fs::write(&path, BODY)?;
   let args = ["sign", "--signer", "bob.alice.eth"];
-  mdsig()?.args(args).arg(&path).assert().code(1);
-  mdsig()?
+  mdtp()?.args(args).arg(&path).assert().code(1);
+  mdtp()?
     .args(args)
     .arg(&path)
-    .env("MDSIG_PRIVATE_KEY", "0x1234")
+    .env("MDTP_PRIVATE_KEY", "0x1234")
     .assert()
     .code(1);
   assert_eq!(fs::read_to_string(&path)?, BODY);

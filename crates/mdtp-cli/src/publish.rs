@@ -1,4 +1,4 @@
-//! `mdsig publish`: publish a Markdown file to Ethereum under a name.
+//! `mdtp publish`: publish a Markdown file to Ethereum under a name.
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -7,12 +7,12 @@ use std::time::Duration;
 use alloy_primitives::{Address, B256, Signature, U256, hex, keccak256};
 use anyhow::{Context, anyhow, bail};
 use k256::ecdsa::SigningKey;
-use md_ens_signature::ens::EthCall;
-use md_ens_signature::names::{NameSystem, name_system};
-use md_ens_signature::publish::{
+use mdtp::ens::EthCall;
+use mdtp::names::{NameSystem, name_system};
+use mdtp::publish::{
   JsonRpc, RECORD_KEY, Record, format_record, publish_calldata,
 };
-use md_ens_signature::signature::address_of;
+use mdtp::signature::address_of;
 use serde_json::{Value, json};
 use tracing::info;
 
@@ -43,7 +43,7 @@ pub struct Args {
   #[arg(long)]
   publisher: String,
   /// The environment variable holding the `0x` hex private key.
-  #[arg(long, default_value = "MDSIG_PRIVATE_KEY")]
+  #[arg(long, default_value = "MDTP_PRIVATE_KEY")]
   key_env: String,
   /// The Sepolia JSON-RPC endpoint.
   #[arg(long, default_value = DEFAULT_RPC)]

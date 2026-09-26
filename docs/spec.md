@@ -206,18 +206,18 @@ Live examples, readable from the Read tab:
 
 ## Library API (as merged)
 
-The Rust crate `md-ens-signature` in
+The Rust crate `mdtp` in
 [capsulizers/mdtp](https://github.com/capsulizers/mdtp) is sans-IO: it builds
 Ethereum calls and decodes their answers, and the embedder sends them. It builds
 for native targets, `wasm32-unknown-unknown`, and `wasm32-wasip2`. As a git
 dependency:
 
 ```toml
-md-ens-signature = { git = "https://github.com/capsulizers/mdtp", rev = "0cd0fd5" }
+mdtp = { git = "https://github.com/capsulizers/mdtp", rev = "0cd0fd5" }
 ```
 
 ```rust
-// md_ens_signature::publish
+// mdtp::publish
 pub const RECORD_KEY: &str = "mdtp";
 pub trait JsonRpc {
   // params is a JSON array; returns the `result` member, which may be null.
@@ -261,13 +261,13 @@ pub struct Published {
 pub async fn read<C: EthCaller + JsonRpc>(doc_name: &str, caller: &C)
   -> anyhow::Result<Published>;
 
-// md_ens_signature::names
+// mdtp::names
 pub const SEPOLIA_CHAIN_ID: u64 = 11_155_111;
 pub trait NameSystem { /* above */ }
 pub struct Ens;
 pub fn name_system(name: &str) -> anyhow::Result<impl NameSystem + use<>>;
 
-// md_ens_signature::ens
+// mdtp::ens
 pub fn namehash(name: &str) -> B256;
 pub struct FoundResolver { pub resolver: Address, pub node: B256 }
 pub fn find_resolver_call(name: &str) -> anyhow::Result<EthCall>;
@@ -281,13 +281,13 @@ pub fn set_text_call(resolver: Address, name: &str, key: &str, value: &str)
 Signing and verifying keep their existing API: `verify::EthCaller`,
 `verify::verify`, `ens::EthCall`, and `ens::find_owner_call`.
 
-The `mdsig` command line tool wraps the same calls:
+The `mdtp` command line tool wraps the same calls:
 
 ```sh
-mdsig publish <file> --name <document name> --publisher <name> \
+mdtp publish <file> --name <document name> --publisher <name> \
   [--key-env VAR] [--rpc URL]
-mdsig read <name> [--json] [--rpc URL]
+mdtp read <name> [--json] [--rpc URL]
 ```
 
-`mdsig read` exits 0 for Verified, 2 for Not found, 3 for Unauthorized, and 4
+`mdtp read` exits 0 for Verified, 2 for Not found, 3 for Unauthorized, and 4
 for Tampered.

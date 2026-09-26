@@ -23,8 +23,8 @@ jobs:
       - run: cargo clippy --all-targets -- -D warnings
       - run: cargo test
       - run: rustup target add wasm32-unknown-unknown wasm32-wasip2
-      - run: cargo build -p md-ens-signature --target wasm32-unknown-unknown
-      - run: cargo build -p md-ens-signature --target wasm32-wasip2
+      - run: cargo build -p mdtp --target wasm32-unknown-unknown
+      - run: cargo build -p mdtp --target wasm32-wasip2
 
   web:
     runs-on: ubuntu-latest
@@ -53,4 +53,4 @@ jobs:
       - run: deno task test
       - run: deno task build
         env:
-          MDSIG_BASE: /mdtp/
+          MDTP_BASE: /mdtp/

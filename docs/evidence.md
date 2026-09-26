@@ -65,7 +65,7 @@ event and changed nothing.
 
 ## Published documents
 
-Published with `mdsig publish` and read back with `mdsig read`. Each
+Published with `mdtp publish` and read back with `mdtp read`. Each
 publication is two transactions from the publisher's key: a self-send whose
 calldata is the file, and a `setText` of the document name's `mdtp` record to
 `eip155:11155111:<content tx>` on the PermissionedResolver. Times are UTC.
@@ -82,9 +82,9 @@ calldata is the file, and a `setText` of the document name's `mdtp` record to
 | Memona page content, publisher `mdsig91205.eth`, 2026-09-26T10:24:48Z | 11785629 | [0xc925f206…](https://sepolia.etherscan.io/tx/0xc925f2065966788a0933bef8c96b2c21bc562539dfa5865143b1b205b3d8feaf) |
 | `memona.mdsig91205.eth` record points at it | 11785629 | [0xb8cab845…](https://sepolia.etherscan.io/tx/0xb8cab8458a74f6dd0b936507857354ee5384abeae1a766ee4ca56037ed534649) |
 
-`mdsig read skills.mdsig91205.eth` gives Verified: the sender is Alice, who
+`mdtp read skills.mdsig91205.eth` gives Verified: the sender is Alice, who
 owns `mdsig91205.eth`, and the Markdown is byte-identical to
-`examples/demo/SKILL-v2.md`. `mdsig read ghost.mdsig91205.eth` gives
+`examples/demo/SKILL-v2.md`. `mdtp read ghost.mdsig91205.eth` gives
 Unauthorized: no one owns `ghost.mdsig91205.eth`, so `findOwner` returns the
 zero address even though the sender could write the record. The ghost record
 lives on the parent's resolver through its wildcard fallback.
@@ -106,7 +106,7 @@ document's parent, so their publications read as Verified.
 | Alice lets Eric `0xA2fD38B9FFbC6E3114670EFA6f6FB82976d31867` set `mdtp` | Alice | 11785905 | 2026-09-26T11:21:12Z | [0x303ef182…](https://sepolia.etherscan.io/tx/0x303ef18297a8441c2a589bc5ee3e6394fe78bc9f129efc089b18ad0e9981247c) |
 | Alice lets Tom `0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c` set `mdtp` | Alice | 11785907 | 2026-09-26T11:21:36Z | [0x6d69a732…](https://sepolia.etherscan.io/tx/0x6d69a732085b79f0339ad59330bdabf1b4e524334f090e38fad5e9ec680f09a8) |
 
-After both, `mdsig read skills.mdsig91205.eth` still gives Verified with
+After both, `mdtp read skills.mdsig91205.eth` still gives Verified with
 the same SKILL v2 transaction: granting a right does not change the record.
 
 ## Test team `mdsigteam6488.eth`

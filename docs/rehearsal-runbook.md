@@ -44,8 +44,8 @@ carries the Markdown, one points the name's `mdtp` record at it. Budget about
 8. Helen's own workspace folder holds `tokens.tsv`, an empty `outputs/`, and
    the two files from `examples/demo/helen-workspace/`: `AGENTS.md` (the rule)
    and `CLAUDE.md` (which makes Claude Code load it). The rule reads a
-   published document with `mdsig read`, so install the command there once:
-   `cargo install --git https://github.com/capsulizers/mdtp mdsig`.
+   published document with `mdtp read`, so install the command there once:
+   `cargo install --git https://github.com/capsulizers/mdtp mdtp-cli`.
 
 ## Verdict gate
 
@@ -54,7 +54,7 @@ not read as Verified at that moment, Memona removes it from what the Folder
 Agent receives, in code, before the agent starts. Helen's workspace rule then
 makes the agent stop instead of looking elsewhere: it uses a skill only from
 the `mdtp://` name Memona passes as the open file, reads it with
-`mdsig read --json`, and continues only on `verified`. The rule lives in
+`mdtp read --json`, and continues only on `verified`. The rule lives in
 Helen's own folder, so no publisher can remove it.
 
 Helen's prompt for every scene, in a new conversation, with

@@ -1,6 +1,6 @@
 /**
  * Builds the WebAssembly bindings for the page: compiles
- * `md-ens-signature-wasm` for the browser, then runs `wasm-bindgen` to write
+ * `mdtp-wasm` for the browser, then runs `wasm-bindgen` to write
  * the JavaScript module into `src/wasm-pkg`.
  *
  * Needs the `wasm32-unknown-unknown` Rust target and `wasm-bindgen` 0.2.108,
@@ -8,7 +8,7 @@
  */
 
 /** The Cargo package that holds the bindings. */
-const PACKAGE = "md-ens-signature-wasm";
+const PACKAGE = "mdtp-wasm";
 /** The Rust target the browser runs. */
 const TARGET = "wasm32-unknown-unknown";
 /** The repository root, where the Cargo workspace lives. */

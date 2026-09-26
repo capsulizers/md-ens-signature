@@ -1,10 +1,10 @@
-//! `mdsig verify`: check a file's signature against ENSv2 on Sepolia.
+//! `mdtp verify`: check a file's signature against ENSv2 on Sepolia.
 
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use anyhow::Context;
-use md_ens_signature::verify::{Verdict, verify};
+use mdtp::verify::{Verdict, verify};
 use serde_json::{Value, json};
 
 use crate::rpc::{DEFAULT_RPC, Rpc, block_on};

@@ -1,12 +1,12 @@
-//! `mdsig inspect`: show a file's signature and who made it, offline.
+//! `mdtp inspect`: show a file's signature and who made it, offline.
 
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use alloy_primitives::hex;
 use anyhow::Context;
-use md_ens_signature::document::{body_digest, read_signature};
-use md_ens_signature::signature::recover;
+use mdtp::document::{body_digest, read_signature};
+use mdtp::signature::recover;
 use tracing::warn;
 
 /// The exit code for a file that carries no signature.

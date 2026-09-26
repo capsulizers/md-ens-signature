@@ -1,9 +1,9 @@
 //! The JSON-RPC client every networked command shares.
 
 use anyhow::{Context, anyhow, bail};
-use md_ens_signature::ens::EthCall;
-use md_ens_signature::publish::{JsonRpc, eth_call};
-use md_ens_signature::verify::EthCaller;
+use mdtp::ens::EthCall;
+use mdtp::publish::{JsonRpc, eth_call};
+use mdtp::verify::EthCaller;
 use serde_json::{Value, json};
 
 /// The public Sepolia node used when `--rpc` is not given.

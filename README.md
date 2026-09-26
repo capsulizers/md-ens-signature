@@ -1,4 +1,4 @@
-# md-ens-signature
+# mdtp
 
 Sign Markdown files with an ENS name, and verify them against ENSv2 permissions.
 
@@ -144,8 +144,8 @@ are read from the chain at run time.
 | `UniversalResolverV2.findOwner`      | Every verifier, in Rust, WebAssembly, and the CLI, asks it who owns the signer name now. The page also uses `findExactRegistry` to find a team's registry.                 | [`findOwner`](https://github.com/ensdomains/contracts-v2/blob/48b3e2d39513b9dd32ef1850877a29009bc807b9/contracts/src/universalResolver/UniversalResolverV2.sol#L69) / [`UniversalResolverV2`](https://sepolia.etherscan.io/address/0x85edf8b6b7d4211e2b07aa687506b746357b92cf)                                                                                                                                                                                                                                 |
 
 In this repository, the verification rule lives in
-[the library's `verify`](crates/md-ens-signature/src/verify.rs) and the
-`findOwner` call in [`ens.rs`](crates/md-ens-signature/src/ens.rs); the page's
+[the library's `verify`](crates/mdtp/src/verify.rs) and the
+`findOwner` call in [`ens.rs`](crates/mdtp/src/ens.rs); the page's
 team setup and grant and revoke calls are in
 [`chain-team-engine.ts`](web/src/engine/chain-team-engine.ts) and
 [`chain-permissions-engine.ts`](web/src/engine/chain-permissions-engine.ts). The
@@ -184,7 +184,7 @@ This is an ENSv2 integration into Memona, Capsulizers' Markdown note app.
 
 | Existed before the event                                                                               | Built at ETHGlobal Tokyo                                                                                                       |
 | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| Memona, a Tauri desktop and web note app in Rust and TypeScript, developed since 2023 (private source) | This repository: the sans-IO Rust library, the `mdsig` CLI, the WebAssembly bindings, and the live page                        |
+| Memona, a Tauri desktop and web note app in Rust and TypeScript, developed since 2023 (private source) | This repository: the sans-IO Rust library, the `mdtp` CLI, the WebAssembly bindings, and the live page                        |
 | Memona's editor, frontmatter row, Folder Agent, and settings                                           | MDTP in Memona 2.0.0-alpha.44: signing, publishing, the read-only `mdtp://` viewer, the `mdtp` link scheme, and the agent gate |
 |                                                                                                        | Memona fixes the end-to-end run turned up, such as a frontmatter editor that rewrote a long hex signature                      |
 
@@ -208,40 +208,40 @@ Prerequisites:
 
 ```sh
 git clone https://github.com/capsulizers/mdtp
-cd md-ens-signature
+cd mdtp
 ```
 
 ### Command line
 
-Install `mdsig`:
+Install `mdtp`:
 
 ```sh
-cargo install --path crates/mdsig
+cargo install --path crates/mdtp-cli
 ```
 
 Verify the demo files against ENSv2 on Sepolia. Exit codes are 0 verified, 2
 unsigned, 3 unauthorized, 4 tampered, and 1 on an error.
 
 ```sh
-mdsig verify examples/signed-by-member.md
-mdsig verify examples/signed-by-revoked.md
-mdsig verify examples/signed-by-member.md --parent mdsig91205.eth --json
+mdtp verify examples/signed-by-member.md
+mdtp verify examples/signed-by-revoked.md
+mdtp verify examples/signed-by-member.md --parent mdsig91205.eth --json
 ```
 
 The example note is unsigned, so `inspect` exits with 2:
 
 ```sh
-mdsig inspect examples/trading-skill.md
+mdtp inspect examples/trading-skill.md
 ```
 
 Sign it into a new file. The key is a well-known test key that anyone can use,
-so never send funds to it. `mdsig` reads keys only from an environment variable,
+so never send funds to it. `mdtp` reads keys only from an environment variable,
 never from its arguments.
 
 ```sh
-export MDSIG_PRIVATE_KEY=0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318
-mdsig sign examples/trading-skill.md --signer bob.alice.eth --output signed.md
-mdsig inspect signed.md
+export MDTP_PRIVATE_KEY=0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318
+mdtp sign examples/trading-skill.md --signer bob.alice.eth --output signed.md
+mdtp inspect signed.md
 ```
 
 `inspect` recovers `0x2c7536E3605D9C16a7a3D7b1898e529396a65c23`, the test key's
@@ -250,13 +250,13 @@ recovers a different address, so the edit shows.
 
 ```sh
 sed 's/under 30/under 35/' signed.md > edited.md
-mdsig inspect edited.md
+mdtp inspect edited.md
 ```
 
 `inspect` works offline. `verify` asks ENSv2 who owns the signer name:
 
 ```sh
-mdsig verify signed.md
+mdtp verify signed.md
 ```
 
 The test key owns no `bob.alice.eth` on Sepolia, so this exits with 3,
@@ -267,8 +267,8 @@ Read a document published to Ethereum under a name. Exit codes are 0 verified, 2
 not found, 3 unauthorized, 4 tampered, and 1 on an error.
 
 ```sh
-mdsig read skills.mdsig91205.eth
-mdsig read skills.mdsig91205.eth --json
+mdtp read skills.mdsig91205.eth
+mdtp read skills.mdsig91205.eth --json
 ```
 
 Publish a file under a name you may write. `publish` sends the file to your own
@@ -276,7 +276,7 @@ address in one Sepolia transaction, then points the name's `mdtp` text record at
 it in a second.
 
 ```sh
-mdsig publish SKILL.md --name skills.mdsig91205.eth --publisher mdsig91205.eth
+mdtp publish SKILL.md --name skills.mdsig91205.eth --publisher mdsig91205.eth
 ```
 
 ### Web page
