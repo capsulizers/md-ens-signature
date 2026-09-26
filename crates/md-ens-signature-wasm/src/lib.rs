@@ -4,12 +4,15 @@
 //! Every function takes the whole Markdown file as a string. Failures throw a
 //! JavaScript `Error` with a generic message.
 
-use alloy_primitives::hex;
+use alloy_primitives::{B256, hex};
 use anyhow::{anyhow, bail};
 use js_sys::{Object, Promise, Reflect};
 use md_ens_signature::document::{self, SignatureFields};
 use md_ens_signature::ens::EthCall;
-use md_ens_signature::publish::{self, JsonRpc, PublishVerdict};
+use md_ens_signature::names::{NameSystem, name_system};
+use md_ens_signature::publish::{
+  self, JsonRpc, PublishVerdict, RECORD_KEY, Record,
+};
 use md_ens_signature::signature;
 use md_ens_signature::verify::{self, EthCaller, Verdict};
 use serde_json::{Value, json};
@@ -174,6 +177,64 @@ pub async fn read(
   for (key, value) in fields {
     Reflect::set(&object, &key.into(), &value)
       .map_err(|_| JsError::new("Failed to build the document"))?;
+  }
+  Ok(object.into())
+}
+
+/// Returns the calldata, as `0x` hex, of the transaction that publishes
+/// `markdown` as `publisher`: sent from the publisher's address to itself.
+#[wasm_bindgen(js_name = publishCalldata)]
+pub fn publish_calldata(publisher: &str, markdown: &str) -> String {
+  hex::encode_prefixed(publish::publish_calldata(publisher, markdown))
+}
+
+/// Whether `publisher` may publish under the document name `name`: the
+/// name itself, an ancestor below the top-level domain, or a subname of the
+/// name's parent.
+#[wasm_bindgen(js_name = mayPublish)]
+pub fn may_publish(publisher: &str, name: &str) -> bool {
+  publish::may_publish(
+    &publisher.trim().to_lowercase(),
+    &name.trim().to_lowercase(),
+  )
+}
+
+/// Builds the transaction `{ to, data }` that points `name`'s `mdtp` text
+/// record at the publishing transaction `txHash`, on the resolver that
+/// serves `name`, found through `rpcUrl`.
+///
+/// Rejects with a generic error when the name has no resolver or the node
+/// cannot be reached.
+#[wasm_bindgen(
+  js_name = setRecordCall,
+  unchecked_return_type = "{ to: string; data: string }"
+)]
+pub async fn set_record_call(
+  name: String,
+  #[wasm_bindgen(js_name = txHash)] tx_hash: String,
+  #[wasm_bindgen(js_name = rpcUrl)] rpc_url: String,
+) -> Result<JsValue, JsError> {
+  let tx_hash: B256 = tx_hash
+    .parse()
+    .map_err(|_| JsError::new("The transaction hash is malformed"))?;
+  let system = name_system(&name)
+    .map_err(|_| JsError::new("Only .eth names can be published"))?;
+  let value = publish::format_record(&Record {
+    chain_id: system.chain_id(),
+    tx_hash,
+  });
+  let caller = FetchCaller { url: rpc_url };
+  let call = system
+    .set_text(&name, RECORD_KEY, &value, &caller)
+    .await
+    .map_err(|_| JsError::new("The name has no resolver to hold the record"))?;
+  let object = Object::new();
+  for (key, value) in [
+    ("to", call.to.to_checksum(None)),
+    ("data", hex::encode_prefixed(&call.data)),
+  ] {
+    Reflect::set(&object, &key.into(), &value.into())
+      .map_err(|_| JsError::new("Failed to build the call"))?;
   }
   Ok(object.into())
 }
