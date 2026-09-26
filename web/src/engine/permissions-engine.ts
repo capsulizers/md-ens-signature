@@ -22,13 +22,20 @@ export interface Transaction {
 /**
  * Reads and changes which subnames may sign for a parent name, through
  * ENSv2 on Sepolia. Changes are sent by the browser wallet's account, which
- * must own the parent.
+ * must own the parent or hold the matching root role on its registry.
  */
 export interface PermissionsEngine {
   /** Every subname the parent's registry has registered, oldest first. */
   members(parentName: string, rpcUrl: string): Promise<Member[]>;
   /** Who owns `name` now, or null when nobody does. */
   owner(name: string, rpcUrl: string): Promise<Address | null>;
+  /** Whether `account` holds every role in `roleBitmap` on the parent's registry. */
+  hasRootRoles(
+    parentName: string,
+    roleBitmap: bigint,
+    account: Address,
+    rpcUrl: string,
+  ): Promise<boolean>;
   /** Registers `label` under the parent, owned by `member`, for a year. */
   grant(
     parentName: string,

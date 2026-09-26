@@ -53,7 +53,7 @@ export class GrantFormElement extends LitElement {
 
   /** Whether the connected wallet may grant for the parent. */
   @property({ attribute: false })
-  accessor canManage: boolean = false;
+  accessor canGrant: boolean = false;
 
   @consume({ context: enginesContext, subscribe: true })
   accessor #engines: Engines = EMPTY_ENGINES;
@@ -78,9 +78,9 @@ export class GrantFormElement extends LitElement {
 
   override render(): TemplateResult {
     const isLabelValid = this.#label !== "" && !this.#label.includes(".");
-    const isGrantDisabled = !this.canManage || this.#isPending ||
+    const isGrantDisabled = !this.canGrant || this.#isPending ||
       !isLabelValid || !isAddress(this.#address);
-    const isInputDisabled = !this.canManage;
+    const isInputDisabled = !this.canGrant;
     return html`
       <div class="row">
         <wa-input

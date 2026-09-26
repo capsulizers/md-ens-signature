@@ -18,6 +18,12 @@ export const ENSV2_START_BLOCK = 11_163_403n;
 /** The widest block range the public Sepolia endpoint answers logs for. */
 export const LOG_BLOCK_RANGE = 50_000n;
 
+/** The root role that lets an account register subnames in a registry. */
+export const ROLE_REGISTRAR = 1n;
+
+/** The root role that lets an account unregister any subname in a registry. */
+export const ROLE_UNREGISTER = 1n << 12n;
+
 /** How long a granted member name lasts before it must be granted again. */
 export const MEMBER_DURATION_SECONDS = 365n * 24n * 60n * 60n;
 
