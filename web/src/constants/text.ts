@@ -112,6 +112,9 @@ export const TEXT = {
     "The record or its transaction is not an MDTP document.",
   publishedUnauthorizedDetail: (publisher: string, name: string): string =>
     `${publisher} may not publish ${name} now.`,
+  openInMemona: "Open in Memona",
+  openInMemonaHint:
+    "Opens the same document in the Memona app, version 2.0.0-alpha.44 or later, if it is installed.",
   publisherLabel: "Publisher",
   publishedAtLabel: "Published",
   transactionLabel: "Transaction",

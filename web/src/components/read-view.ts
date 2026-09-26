@@ -88,6 +88,13 @@ export class ReadViewElement extends LitElement {
       font-size: var(--wa-font-size-s);
     }
 
+    .open {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--wa-space-s);
+    }
+
     .status {
       display: flex;
       align-items: center;
@@ -198,9 +205,27 @@ export class ReadViewElement extends LitElement {
       <md-markdown-view .markdown=${publication.markdown}></md-markdown-view>
     `;
     const facts = this.#renderFacts(publication);
+    const open = this.#renderOpenInMemona(publication);
     return html`
       <md-verdict-badge .publication=${publication}></md-verdict-badge>
-      ${facts} ${body}
+      ${facts} ${open} ${body}
+    `;
+  }
+
+  /** A link to the same document in the Memona app, through the OS. */
+  #renderOpenInMemona(publication: Publication): TemplateResult {
+    if (publication.verdict === "NOT_FOUND") {
+      return html``;
+    }
+    const href = mdtpLink(publication.name);
+    return html`
+      <div class="open">
+        <wa-button href=${href} size="small">
+          <wa-icon slot="start" name="box-arrow-up-right"></wa-icon>
+          ${TEXT.openInMemona}
+        </wa-button>
+        <span class="hint">${TEXT.openInMemonaHint}</span>
+      </div>
     `;
   }
 
