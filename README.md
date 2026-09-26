@@ -2,7 +2,7 @@
 
 Sign Markdown files with an ENS name, and verify them against ENSv2 permissions.
 
-**Live page:** https://cunarist.github.io/mdtp/
+**Live page:** https://capsulizers.github.io/mdtp/
 
 ## The problem
 
@@ -41,7 +41,7 @@ one of four verdicts:
 
 No wallet needed; the page reads ENSv2 on Sepolia directly.
 
-1. Open the [live page](https://cunarist.github.io/mdtp/), then
+1. Open the [live page](https://capsulizers.github.io/mdtp/), then
    copy the raw text of [`signed-by-member.md`](examples/signed-by-member.md)
    into the Markdown file box. It shows **Verified**: `bob.mdsig91205.eth` is a
    member and its owner signed the body.
@@ -53,9 +53,9 @@ No wallet needed; the page reads ENSv2 on Sepolia directly.
 
 | Step                       | Live page                                                                                                                                               |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. A member's file         | ![Verified](https://raw.githubusercontent.com/cunarist/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-verified.png)         |
-| 2. One number edited       | ![Tampered](https://raw.githubusercontent.com/cunarist/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-tampered.png)         |
-| 3. A revoked member's file | ![Unauthorized](https://raw.githubusercontent.com/cunarist/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-unauthorized.png) |
+| 1. A member's file         | ![Verified](https://raw.githubusercontent.com/capsulizers/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-verified.png)         |
+| 2. One number edited       | ![Tampered](https://raw.githubusercontent.com/capsulizers/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-tampered.png)         |
+| 3. A revoked member's file | ![Unauthorized](https://raw.githubusercontent.com/capsulizers/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-unauthorized.png) |
 
 With a wallet on Sepolia, the same page signs files, creates a team name, and
 grants or revokes members.
@@ -162,7 +162,7 @@ Prerequisites:
   target, and `wasm-bindgen` 0.2.108, the exact version the bindings pin.
 
 ```sh
-git clone https://github.com/cunarist/mdtp
+git clone https://github.com/capsulizers/mdtp
 cd md-ens-signature
 ```
 
@@ -240,5 +240,5 @@ Agents wrote most of the code, tests, and documentation, including this README,
 under the direction of the Capsulizers team, who set the design, the file
 format, and the ENSv2 permission model. Every change landed as a small pull
 request with passing CI; the
-[merged pull requests](https://github.com/cunarist/mdtp/pulls?q=is%3Apr+is%3Amerged)
+[merged pull requests](https://github.com/capsulizers/mdtp/pulls?q=is%3Apr+is%3Amerged)
 record what each one did and how it was checked.

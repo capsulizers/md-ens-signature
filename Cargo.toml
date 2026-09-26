@@ -6,7 +6,7 @@ members = ["crates/*"]
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/cunarist/mdtp"
+repository = "https://github.com/capsulizers/mdtp"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
