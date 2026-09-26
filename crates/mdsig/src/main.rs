@@ -4,6 +4,9 @@
 //! through `tracing` to standard error.
 
 mod inspect;
+mod publish;
+mod read;
+mod rpc;
 mod sign;
 mod verify;
 
@@ -26,6 +29,8 @@ enum Command {
   Sign(sign::Args),
   Inspect(inspect::Args),
   Verify(verify::Args),
+  Publish(publish::Args),
+  Read(read::Args),
 }
 
 fn main() -> ExitCode {
@@ -40,6 +45,8 @@ fn main() -> ExitCode {
     Command::Sign(args) => sign::run(&args),
     Command::Inspect(args) => inspect::run(&args),
     Command::Verify(args) => verify::run(&args),
+    Command::Publish(args) => publish::run(&args),
+    Command::Read(args) => read::run(&args),
   };
   result.unwrap_or_else(|error| {
     error!("{error:#}");

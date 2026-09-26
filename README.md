@@ -218,6 +218,22 @@ The test key owns no `bob.alice.eth` on Sepolia, so this exits with 3,
 unauthorized. `--parent` accepts only that name and its subnames, `--rpc` picks
 another Sepolia node, and `--json` prints the verdict as JSON.
 
+Read a document published to Ethereum under a name. Exit codes are 0
+verified, 2 not found, 3 unauthorized, 4 tampered, and 1 on an error.
+
+```sh
+mdsig read skills.mdsig91205.eth
+mdsig read skills.mdsig91205.eth --json
+```
+
+Publish a file under a name you may write. `publish` sends the file to your
+own address in one Sepolia transaction, then points the name's `mdtp` text
+record at it in a second.
+
+```sh
+mdsig publish SKILL.md --name skills.mdsig91205.eth --publisher mdsig91205.eth
+```
+
 ### Web page
 
 ```sh
