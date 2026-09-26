@@ -44,24 +44,60 @@ one of four verdicts:
 
 No wallet needed; the page reads ENSv2 on Sepolia directly.
 
-1. Open the [live page](https://capsulizers.github.io/mdtp/), then
-   copy the raw text of [`signed-by-member.md`](examples/signed-by-member.md)
-   into the Markdown file box. It shows **Verified**: `bob.mdsig91205.eth` is a
-   member and its owner signed the body.
+1. Open the [live page](https://capsulizers.github.io/mdtp/), then copy the raw
+   text of [`signed-by-member.md`](examples/signed-by-member.md) into the
+   Markdown file box. It shows **Verified**: `bob.mdsig91205.eth` is a member
+   and its owner signed the body.
 2. In the box, change `under 30` to `under 35`. It turns **Tampered**.
 3. Replace the text with
    [`signed-by-revoked.md`](examples/signed-by-revoked.md). It shows
    **Unauthorized**: the team's owner revoked `carol.mdsig91205.eth`, so a file
    signed while it was granted no longer counts.
 
-| Step                       | Live page                                                                                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Step                       | Live page                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1. A member's file         | ![Verified](https://raw.githubusercontent.com/capsulizers/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-verified.png)         |
 | 2. One number edited       | ![Tampered](https://raw.githubusercontent.com/capsulizers/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-tampered.png)         |
 | 3. A revoked member's file | ![Unauthorized](https://raw.githubusercontent.com/capsulizers/mdtp/8d83d0c6f0d60abfffe22ae07b887c6d6bd76501/readme/readme-unauthorized.png) |
 
 With a wallet on Sepolia, the same page signs files, creates a team name, and
 grants or revokes members.
+
+## Memona
+
+[Memona](https://memona.io), Capsulizers' Markdown note app, speaks MDTP from
+2.0.0-alpha.44. Download it from [memona.io](https://memona.io).
+
+- **Set up.** Settings > Editor > Ethereum takes an RPC URL (a public Sepolia
+  node by default), your ENS name, and your private key, which stays on the
+  device and is never shown again. Reading needs no key.
+- **Sign.** A Sign button in a Markdown page's frontmatter row writes `signer`
+  and `signature`, and a live badge shows Verified, Tampered, Revoked, or Not a
+  member.
+- **Publish.** Publish to Ethereum asks for the document name, warns that the
+  document becomes public and permanent (and, for a name that already holds one,
+  that it replaces the current version), sends the two transactions, and shows
+  the `mdtp://` link to share.
+- **Read.** Type `mdtp://skills.mdsig91205.eth` in the path bar, click such a
+  link in a page, or click it anywhere else on the computer, since Memona
+  registers the `mdtp` scheme. The document opens read-only with its verdict
+  (Verified, Unauthorized, Tampered, or Not found), publisher, and published
+  time.
+- **Agents.** Memona keeps a published document that does not read as Verified
+  out of the Folder Agent's prompt, checked again at send time.
+
+| Sign                                                                                                                                                              | Publish                                                                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ![Verified badge after signing](https://raw.githubusercontent.com/capsulizers/mdtp/fbeed7afdbe4e149023ea7483f24fc7723feb26d/docs-runbook-alpha44/memona-sign.png) | ![The mdtp link after publishing](https://raw.githubusercontent.com/capsulizers/mdtp/fbeed7afdbe4e149023ea7483f24fc7723feb26d/docs-runbook-alpha44/memona-published.png) |
+| From [lead/memona/pulls/1134](https://git.capsulizers.com/lead/memona/pulls/1134)                                                                                 | From [lead/memona/pulls/1138](https://git.capsulizers.com/lead/memona/pulls/1138)                                                                                        |
+
+**Media.** Only small Markdown goes on chain, up to about 100 KB in one
+transaction. Ordinary HTTP images, video, and links inside it are allowed and
+render as usual; large files belong on a web server or CDN, which is cheaper and
+faster than the chain.
+
+The [demo runbook](docs/rehearsal-runbook.md) plays a full team story in Memona:
+two publishers, a revoke, and an agent that stops on anything not Verified.
 
 ## How it works
 
@@ -146,15 +182,21 @@ address the moment the label is unregistered or expires.
 
 This is an ENSv2 integration into Memona, Capsulizers' Markdown note app.
 
-| Existed before the event                                                                               | Built at ETHGlobal Tokyo                                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Memona, a Tauri desktop and web note app in Rust and TypeScript, developed since 2023 (private source) | This repository: the sans-IO Rust library, the `mdsig` CLI, the WebAssembly bindings, and the live page                                                                                 |
-| Memona's plugin runtime and store, which let a WASI plugin open remote storage as a folder             | The [WebDAV filesystem plugin](https://git.capsulizers.com/commons/memona-plugin-webdav), which the signature plugin builds on                                                          |
-|                                                                                                        | The [Memona signature plugin](https://git.capsulizers.com/commons/memona-plugin-signature), which signs every Markdown file saved through it and shows the verdict as a badge in Memona |
-|                                                                                                        | Memona fixes the end-to-end run turned up, such as a frontmatter editor that rewrote a long hex signature                                                                               |
+| Existed before the event                                                                               | Built at ETHGlobal Tokyo                                                                                                       |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Memona, a Tauri desktop and web note app in Rust and TypeScript, developed since 2023 (private source) | This repository: the sans-IO Rust library, the `mdsig` CLI, the WebAssembly bindings, and the live page                        |
+| Memona's editor, frontmatter row, Folder Agent, and settings                                           | MDTP in Memona 2.0.0-alpha.44: signing, publishing, the read-only `mdtp://` viewer, the `mdtp` link scheme, and the agent gate |
+|                                                                                                        | Memona fixes the end-to-end run turned up, such as a frontmatter editor that rewrote a long hex signature                      |
 
-The signature plugin uses this library as a git dependency, so Memona, the CLI,
-and the page all run the same verification code.
+Memona embeds this library as a git dependency, so Memona, the CLI, and the page
+all run the same verification code.
+
+Also: before MDTP, a
+[Memona signature plugin](https://git.capsulizers.com/commons/memona-plugin-signature)
+built on the
+[WebDAV filesystem plugin](https://git.capsulizers.com/commons/memona-plugin-webdav)
+signed every Markdown file saved to a shared WebDAV folder and showed its
+verdict. Memona now signs and publishes by itself.
 
 ## Run locally
 
@@ -221,17 +263,17 @@ The test key owns no `bob.alice.eth` on Sepolia, so this exits with 3,
 unauthorized. `--parent` accepts only that name and its subnames, `--rpc` picks
 another Sepolia node, and `--json` prints the verdict as JSON.
 
-Read a document published to Ethereum under a name. Exit codes are 0
-verified, 2 not found, 3 unauthorized, 4 tampered, and 1 on an error.
+Read a document published to Ethereum under a name. Exit codes are 0 verified, 2
+not found, 3 unauthorized, 4 tampered, and 1 on an error.
 
 ```sh
 mdsig read skills.mdsig91205.eth
 mdsig read skills.mdsig91205.eth --json
 ```
 
-Publish a file under a name you may write. `publish` sends the file to your
-own address in one Sepolia transaction, then points the name's `mdtp` text
-record at it in a second.
+Publish a file under a name you may write. `publish` sends the file to your own
+address in one Sepolia transaction, then points the name's `mdtp` text record at
+it in a second.
 
 ```sh
 mdsig publish SKILL.md --name skills.mdsig91205.eth --publisher mdsig91205.eth
