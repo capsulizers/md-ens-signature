@@ -7,6 +7,7 @@ export const TEXT = {
   signTab: "Sign",
   publishTab: "Publish",
   readTab: "Read",
+  specTab: "Spec",
   connectWallet: "Connect wallet",
   switchToSepolia: "Switch to Sepolia",
   walletFailed: "The wallet request was cancelled or failed.",

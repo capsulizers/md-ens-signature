@@ -28,6 +28,7 @@ import "./publish-view.ts";
 import "./read-view.ts";
 import { RouteController } from "./route-controller.ts";
 import "./settings-row.ts";
+import "./spec-view.ts";
 import "./team-wizard.ts";
 import "./wallet-button.ts";
 import { WalletController } from "./wallet-controller.ts";
@@ -135,6 +136,7 @@ export class RootElement extends LitElement {
         <wa-tab panel="SIGN">${TEXT.signTab}</wa-tab>
         <wa-tab panel="PUBLISH">${TEXT.publishTab}</wa-tab>
         <wa-tab panel="READ">${TEXT.readTab}</wa-tab>
+        <wa-tab panel="SPEC">${TEXT.specTab}</wa-tab>
         <wa-tab-panel name="SIGN">
           <div class="panels">
             <md-document-panel></md-document-panel>
@@ -149,6 +151,9 @@ export class RootElement extends LitElement {
         </wa-tab-panel>
         <wa-tab-panel name="READ">
           <md-read-view .name=${this.#route.name}></md-read-view>
+        </wa-tab-panel>
+        <wa-tab-panel name="SPEC">
+          <md-spec-view></md-spec-view>
         </wa-tab-panel>
       </wa-tab-group>
     `;
