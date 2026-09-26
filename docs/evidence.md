@@ -63,6 +63,28 @@ rerun: [0x66cbf595…](https://sepolia.etherscan.io/tx/0x66cbf595a7c2ae30a39bc84
 block 11783241, from Alice. Eric already held both roles, so it emitted no
 event and changed nothing.
 
+## Published documents
+
+Published with `mdsig publish` and read back with `mdsig read`. Each
+publication is two transactions from the publisher's key: a self-send whose
+calldata is the file, and a `setText` of the document name's `mdtp` record to
+`eip155:11155111:<content tx>` on the PermissionedResolver. Times are UTC.
+
+| What | Block | Transaction |
+| --- | --- | --- |
+| Alice registers `skills.mdsig91205.eth` to herself, resolver = PermissionedResolver | 11785175 | [0x0d97e74e…](https://sepolia.etherscan.io/tx/0x0d97e74e11e061b9b9ce5aa9694e01385a47d394b4bfd3c742073e92eedb834e) |
+| SKILL v2 content, publisher `mdsig91205.eth`, 2026-09-26T08:54:48Z | 11785179 | [0x28b10903…](https://sepolia.etherscan.io/tx/0x28b109031ba6ccdbae888af03330480575ea648867ccce0e8def485809ed2104) |
+| `skills.mdsig91205.eth` record points at it | 11785179 | [0xf683bca5…](https://sepolia.etherscan.io/tx/0xf683bca5c201fe4b80629b872ce3c9356c663f16d69956e73c6ab24b5516b5dc) |
+| SKILL v2 content, claimed publisher `ghost.mdsig91205.eth` (unregistered), 2026-09-26T08:55:48Z | 11785184 | [0xc84b8a54…](https://sepolia.etherscan.io/tx/0xc84b8a54f315ef51d35bbaf795fea57912e5119c729bf419f09ac0ea4f3b027a) |
+| `ghost.mdsig91205.eth` record points at it | 11785184 | [0x32fbc4d4…](https://sepolia.etherscan.io/tx/0x32fbc4d45b048b1f533bb9f3e6eb6006f728b3b2c3c66d7d07fa5a11debce9b3) |
+
+`mdsig read skills.mdsig91205.eth` gives Verified: the sender is Alice, who
+owns `mdsig91205.eth`, and the Markdown is byte-identical to
+`examples/demo/SKILL-v2.md`. `mdsig read ghost.mdsig91205.eth` gives
+Unauthorized: no one owns `ghost.mdsig91205.eth`, so `findOwner` returns the
+zero address even though the sender could write the record. The ghost record
+lives on the parent's resolver through its wildcard fallback.
+
 ## Test team `mdsigteam6488.eth`
 
 Used only to test that a role holder, not the owner, can grant and revoke
