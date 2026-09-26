@@ -1,4 +1,4 @@
-# MDTP specification
+# MDTP: Markdown Transfer Protocol
 
 Version 1, September 2026.
 
@@ -115,7 +115,8 @@ write only this record with
 - **Verified** when the transaction's sender equals `findOwner(publisher)`, that
   owner is not the zero address, and the publisher may publish the document
   name: it is the name itself, one of its ancestors below the top-level domain,
-  or a subname of the name's parent.
+  or a subname of the name's parent when that parent is not a top-level domain.
+  Only `mdsig91205.eth` itself may publish `mdsig91205.eth`.
 - **Unauthorized** otherwise, for example after the publisher name is revoked.
 
 ### Links
@@ -126,10 +127,11 @@ links inside a published file are not supported in version 1.
 
 ### Media
 
-Only small Markdown goes on chain. Ordinary HTTP images, video, and links inside
-the Markdown are allowed and render as usual. Large files belong on a web server
-or CDN, which is cheaper and faster than the chain. A later version may list
-each linked file's SHA-256 in the signed Markdown so a swapped file is caught.
+Only small Markdown goes on chain, up to about 100 KB. Ordinary HTTP images,
+video, and links inside the Markdown are allowed and encouraged, and render as
+usual. Large files belong on a web server or CDN, which is cheaper and faster
+than the chain. A later version may list each linked file's SHA-256 in the
+signed Markdown so a swapped file is caught.
 
 ## Name systems
 
@@ -181,7 +183,7 @@ Live examples, readable from the Read tab:
 - [`mdtp://ghost.mdsig91205.eth`](mdtp://ghost.mdsig91205.eth): claiming a
   publisher name that nobody owns, **Unauthorized**.
 
-## Library API
+## Library API (as merged)
 
 The Rust crate `md-ens-signature` in
 [capsulizers/mdtp](https://github.com/capsulizers/mdtp) is sans-IO: it builds
@@ -234,6 +236,7 @@ pub struct Published {
   pub block: u64,            // 0 without a mined transaction
   pub timestamp: u64,        // Unix seconds, UTC
 }
+// Err only from the caller, or for a name no name system serves.
 pub async fn read<C: EthCaller + JsonRpc>(doc_name: &str, caller: &C)
   -> anyhow::Result<Published>;
 
@@ -241,7 +244,7 @@ pub async fn read<C: EthCaller + JsonRpc>(doc_name: &str, caller: &C)
 pub const SEPOLIA_CHAIN_ID: u64 = 11_155_111;
 pub trait NameSystem { /* above */ }
 pub struct Ens;
-pub fn name_system(name: &str) -> anyhow::Result<impl NameSystem>;
+pub fn name_system(name: &str) -> anyhow::Result<impl NameSystem + use<>>;
 
 // md_ens_signature::ens
 pub fn namehash(name: &str) -> B256;
@@ -260,7 +263,8 @@ Signing and verifying keep their existing API: `verify::EthCaller`,
 The `mdsig` command line tool wraps the same calls:
 
 ```sh
-mdsig publish <file> --name <document name> --publisher <name> [--rpc URL]
+mdsig publish <file> --name <document name> --publisher <name> \
+  [--key-env VAR] [--rpc URL]
 mdsig read <name> [--json] [--rpc URL]
 ```
 
