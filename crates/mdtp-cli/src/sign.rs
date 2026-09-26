@@ -1,4 +1,4 @@
-//! `mdsig sign`: sign a file's body for an ENS name and write the signature
+//! `mdtp sign`: sign a file's body for an ENS name and write the signature
 //! into its frontmatter.
 
 use std::path::PathBuf;
@@ -6,10 +6,8 @@ use std::process::ExitCode;
 
 use alloy_primitives::hex;
 use anyhow::{Context, anyhow};
-use md_ens_signature::document::{
-  SignatureFields, body_digest, write_signature,
-};
-use md_ens_signature::signature::{address_of, sign};
+use mdtp::document::{SignatureFields, body_digest, write_signature};
+use mdtp::signature::{address_of, sign};
 use tracing::info;
 
 /// Sign a file's body for an ENS name with an Ethereum private key.
@@ -24,7 +22,7 @@ pub struct Args {
   #[arg(long)]
   signer: String,
   /// The environment variable holding the `0x` hex private key.
-  #[arg(long, default_value = "MDSIG_PRIVATE_KEY")]
+  #[arg(long, default_value = "MDTP_PRIVATE_KEY")]
   key_env: String,
   /// Where to write the signed file, instead of the input file.
   #[arg(long, short)]

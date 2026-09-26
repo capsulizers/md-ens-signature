@@ -16,7 +16,7 @@ const TEST_ADDRESS = "0x2c7536E3605D9C16a7a3D7b1898e529396a65c23";
 /** A file the Rust library signed with the test key as `bob.alice.eth`. */
 const SIGNED: string = await Deno.readTextFile(
   new URL(
-    "../../crates/md-ens-signature-wasm/tests/fixtures/signed.md",
+    "../../crates/mdtp-wasm/tests/fixtures/signed.md",
     import.meta.url,
   ),
 );
@@ -30,7 +30,7 @@ const DUMMY_SIGNATURE = `0x${"11".repeat(64)}1b`;
 initSync({
   module: await Deno.readFile(
     new URL(
-      "../src/wasm-pkg/md_ens_signature_wasm_bg.wasm",
+      "../src/wasm-pkg/mdtp_wasm_bg.wasm",
       import.meta.url,
     ),
   ),

@@ -1,13 +1,11 @@
-//! Runs `mdsig inspect` on signed, unsigned, and malformed files.
+//! Runs `mdtp inspect` on signed, unsigned, and malformed files.
 
 use std::fs;
 use std::path::Path;
 
 use assert_cmd::Command;
-use md_ens_signature::document::{
-  SignatureFields, body_digest, write_signature,
-};
-use md_ens_signature::signature::sign;
+use mdtp::document::{SignatureFields, body_digest, write_signature};
+use mdtp::signature::sign;
 use tempfile::TempDir;
 
 const KEY: [u8; 32] = [
@@ -29,7 +27,7 @@ fn signed_markdown() -> anyhow::Result<String> {
 }
 
 fn inspect(path: &Path) -> anyhow::Result<(Option<i32>, String)> {
-  let output = Command::cargo_bin("mdsig")?
+  let output = Command::cargo_bin("mdtp")?
     .arg("inspect")
     .arg(path)
     .output()?;

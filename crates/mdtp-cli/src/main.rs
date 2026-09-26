@@ -1,4 +1,4 @@
-//! `mdsig`, the command line tool for Markdown files signed with an ENS name.
+//! `mdtp`, the command line tool for Markdown files signed with an ENS name.
 //!
 //! Results go to standard output. Everything else, such as errors, goes
 //! through `tracing` to standard error.

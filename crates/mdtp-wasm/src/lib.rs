@@ -1,4 +1,4 @@
-//! JavaScript bindings for `md-ens-signature`, compiled to WebAssembly with
+//! JavaScript bindings for `mdtp`, compiled to WebAssembly with
 //! `wasm-bindgen`.
 //!
 //! Every function takes the whole Markdown file as a string. Failures throw a
@@ -7,14 +7,12 @@
 use alloy_primitives::{B256, hex};
 use anyhow::{anyhow, bail};
 use js_sys::{Object, Promise, Reflect};
-use md_ens_signature::document::{self, SignatureFields};
-use md_ens_signature::ens::EthCall;
-use md_ens_signature::names::{NameSystem, name_system};
-use md_ens_signature::publish::{
-  self, JsonRpc, PublishVerdict, RECORD_KEY, Record,
-};
-use md_ens_signature::signature;
-use md_ens_signature::verify::{self, EthCaller, Verdict};
+use mdtp::document::{self, SignatureFields};
+use mdtp::ens::EthCall;
+use mdtp::names::{NameSystem, name_system};
+use mdtp::publish::{self, JsonRpc, PublishVerdict, RECORD_KEY, Record};
+use mdtp::signature;
+use mdtp::verify::{self, EthCaller, Verdict};
 use serde_json::{Value, json};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::{JsError, JsValue, wasm_bindgen};

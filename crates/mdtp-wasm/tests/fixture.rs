@@ -2,10 +2,10 @@
 //! library with the well-known test key.
 
 use alloy_primitives::hex;
-use md_ens_signature::document::{
+use mdtp::document::{
   SignatureFields, body_digest, remove_signature, write_signature,
 };
-use md_ens_signature::signature::sign;
+use mdtp::signature::sign;
 
 /// A well-known test key; its address is
 /// `0x2c7536E3605D9C16a7a3D7b1898e529396a65c23`.

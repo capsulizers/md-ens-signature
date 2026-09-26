@@ -1,4 +1,4 @@
-//! Runs `mdsig verify`. The offline cases need no node; the live one talks to
+//! Runs `mdtp verify`. The offline cases need no node; the live one talks to
 //! Sepolia and runs with `cargo test -- --ignored`.
 
 use std::fs;
@@ -16,18 +16,18 @@ const PARENT: &str = "mdsig91205.eth";
 /// A port nothing listens on, so any lookup fails fast.
 const DEAD_RPC: &str = "http://127.0.0.1:9";
 
-fn mdsig() -> anyhow::Result<Command> {
-  let mut command = Command::cargo_bin("mdsig")?;
-  command.env_remove("MDSIG_PRIVATE_KEY");
+fn mdtp() -> anyhow::Result<Command> {
+  let mut command = Command::cargo_bin("mdtp")?;
+  command.env_remove("MDTP_PRIVATE_KEY");
   Ok(command)
 }
 
 fn sign(path: &Path, signer: &str, key: &str) -> anyhow::Result<()> {
   fs::write(path, BODY)?;
-  let status = mdsig()?
+  let status = mdtp()?
     .args(["sign", "--signer", signer])
     .arg(path)
-    .env("MDSIG_PRIVATE_KEY", key)
+    .env("MDTP_PRIVATE_KEY", key)
     .output()?
     .status;
   assert!(status.success());
@@ -35,7 +35,7 @@ fn sign(path: &Path, signer: &str, key: &str) -> anyhow::Result<()> {
 }
 
 fn verify(path: &Path, rpc: &str) -> anyhow::Result<(Option<i32>, String)> {
-  let output = mdsig()?
+  let output = mdtp()?
     .args(["verify", "--json", "--rpc", rpc])
     .arg(path)
     .output()?;

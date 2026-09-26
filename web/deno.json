@@ -73,7 +73,7 @@
     "#engine": "./src/engine/mod.ts",
     "#utils": "./src/utils/mod.ts",
     "#constants": "./src/constants/mod.ts",
-    "#wasm-pkg": "./src/wasm-pkg/md_ens_signature_wasm.js",
+    "#wasm-pkg": "./src/wasm-pkg/mdtp_wasm.js",
     "@cunarist/deno-import-check": "jsr:@cunarist/deno-import-check@0.9.0",
     "@cunarist/deno-lit-analyzer": "jsr:@cunarist/deno-lit-analyzer@0.4.3",
     "@cunarist/deno-lint-plugin-explicit-types": "jsr:@cunarist/deno-lint-plugin-explicit-types@0.5.1",

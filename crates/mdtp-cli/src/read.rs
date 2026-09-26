@@ -1,8 +1,8 @@
-//! `mdsig read`: fetch a document published under a name and judge it.
+//! `mdtp read`: fetch a document published under a name and judge it.
 
 use std::process::ExitCode;
 
-use md_ens_signature::publish::{PublishVerdict, Published, read};
+use mdtp::publish::{PublishVerdict, Published, read};
 use serde_json::{Value, json};
 
 use crate::rpc::{DEFAULT_RPC, Rpc, block_on};

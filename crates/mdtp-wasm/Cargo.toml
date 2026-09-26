@@ -1,6 +1,6 @@
 [package]
-name = "md-ens-signature-wasm"
-description = "JavaScript bindings for md-ens-signature, built with wasm-bindgen."
+name = "mdtp-wasm"
+description = "JavaScript bindings for mdtp, built with wasm-bindgen."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -17,7 +17,7 @@ crate-type = ["cdylib", "rlib"]
 alloy-primitives = { version = "1.7.3", default-features = false }
 anyhow = "1.0.104"
 js-sys = "0.3"
-md-ens-signature = { path = "../md-ens-signature" }
+mdtp = { path = "../mdtp" }
 serde_json = "1.0.151"
 # Must match the installed `wasm-bindgen` CLI exactly.
 wasm-bindgen = "=0.2.108"
