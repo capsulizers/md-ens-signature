@@ -1,3 +1,6 @@
+import "@awesome.me/webawesome/dist/components/tab-group/tab-group.js";
+import "@awesome.me/webawesome/dist/components/tab-panel/tab-panel.js";
+import "@awesome.me/webawesome/dist/components/tab/tab.js";
 import { provide } from "@lit/context";
 import { css, html, LitElement, type TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
@@ -75,9 +78,20 @@ export class RootElement extends LitElement {
       font-size: var(--wa-font-size-2xl);
     }
 
+    .story {
+      margin: var(--wa-space-xs) 0 0;
+      font-size: var(--wa-font-size-l);
+      font-weight: var(--wa-font-weight-semibold);
+    }
+
     p {
+      max-width: 44rem;
       margin: var(--wa-space-xs) 0 0;
       color: var(--wa-color-text-quiet);
+    }
+
+    wa-tab-panel::part(base) {
+      padding: var(--wa-space-xl) 0 0;
     }
   `;
 
@@ -101,18 +115,24 @@ export class RootElement extends LitElement {
       <header>
         <div>
           <h1>${TEXT.title}</h1>
+          <div class="story">${TEXT.story}</div>
           <p>${TEXT.subtitle}</p>
         </div>
         <md-wallet-button></md-wallet-button>
       </header>
       <md-settings-row></md-settings-row>
-      <div class="panels">
-        <md-document-panel></md-document-panel>
-        <div class="side">
-          <md-permissions-panel></md-permissions-panel>
-          <md-team-wizard></md-team-wizard>
-        </div>
-      </div>
+      <wa-tab-group>
+        <wa-tab panel="sign">${TEXT.signTab}</wa-tab>
+        <wa-tab-panel name="sign">
+          <div class="panels">
+            <md-document-panel></md-document-panel>
+            <div class="side">
+              <md-permissions-panel></md-permissions-panel>
+              <md-team-wizard></md-team-wizard>
+            </div>
+          </div>
+        </wa-tab-panel>
+      </wa-tab-group>
     `;
   }
 

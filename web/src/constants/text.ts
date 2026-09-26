@@ -1,8 +1,10 @@
 /** Every piece of text the page shows, in one place. */
 export const TEXT = {
-  title: "Markdown ENS Signature",
+  title: "MDTP",
+  story: "One name, two guarantees: signed in private, published in public.",
   subtitle:
-    "Sign a Markdown file with an ENS name and verify it against ENSv2 permissions on Sepolia.",
+    "An ENS name decides who may write. Sign a file to catch any forgery, or publish it to Sepolia where nobody can forge or delete it.",
+  signTab: "Sign",
   connectWallet: "Connect wallet",
   switchToSepolia: "Switch to Sepolia",
   walletFailed: "The wallet request was cancelled or failed.",
