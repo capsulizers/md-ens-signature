@@ -156,28 +156,28 @@ export class VerdictBadgeElement extends LitElement {
   #publicationLook(publication: Publication): BadgeLook {
     const { name, publisher } = publication;
     switch (publication.verdict) {
-      case "verified":
+      case "VERIFIED":
         return {
           tone: "success",
           icon: "patch-check-fill",
           title: TEXT.verified,
           detail: TEXT.publishedDetail(publisher),
         };
-      case "unauthorized":
+      case "UNAUTHORIZED":
         return {
           tone: "warning",
           icon: "shield-exclamation",
           title: TEXT.unauthorized,
           detail: TEXT.publishedUnauthorizedDetail(publisher, name),
         };
-      case "tampered":
+      case "TAMPERED":
         return {
           tone: "danger",
           icon: "x-octagon-fill",
           title: TEXT.tampered,
           detail: TEXT.publishedTamperedDetail,
         };
-      case "notFound":
+      case "NOT_FOUND":
         return {
           tone: "neutral",
           icon: "file-earmark",

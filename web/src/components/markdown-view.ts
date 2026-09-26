@@ -1,11 +1,10 @@
 import DOMPurify from "dompurify";
 import { css, html, LitElement, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
-import { marked } from "marked";
+import { Marked, type Token } from "marked";
 
 import { TEXT } from "#constants";
-import { documentName, isMdtpLink, routeHash } from "#utils";
+import { isMdtpLink, isReadHash, readHash } from "#utils";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -13,16 +12,20 @@ declare global {
   }
 }
 
-/**
- * The link schemes a published file may use: the web, mail, and `mdtp://`
- * links to other published documents. Anything else, such as `javascript:`,
- * is dropped by the sanitizer.
- */
-const ALLOWED_URI =
-  /^(?:(?:https?|mailto|mdtp):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i;
-
 /** Frontmatter at the start of a file, and the body after it. */
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
+
+/**
+ * Parses Markdown with `mdtp://` links turned into the Read tab's hash, so
+ * the sanitizer keeps them and following one is ordinary page navigation.
+ */
+const MARKED = new Marked({
+  walkTokens(token: Token): void {
+    if (token.type === "link" && isMdtpLink(token.href)) {
+      token.href = readHash(token.href);
+    }
+  },
+});
 
 /**
  * Renders a published Markdown file as sanitized HTML, and follows its
@@ -100,26 +103,21 @@ export class MarkdownViewElement extends LitElement {
 
   override render(): TemplateResult {
     const match = FRONTMATTER.exec(this.markdown);
-    const body = match === null
-      ? this.markdown
-      : this.markdown.slice(match[0].length);
-    const rendered = DOMPurify.sanitize(
-      marked.parse(body, { async: false }),
-      { ALLOWED_URI_REGEXP: ALLOWED_URI },
-    );
-    const frontmatter = match?.[1] === undefined ? html`` : html`
-      <pre class="frontmatter" aria-label=${TEXT
-        .frontmatterLabel}>${match[1]}</pre>
+    const yaml = match?.[1];
+    const body = this.markdown.slice(match?.[0].length ?? 0);
+    const rendered = renderMarkdown(body);
+    const frontmatter = yaml === undefined ? html`` : html`
+      <pre class="frontmatter" aria-label=${TEXT.frontmatterLabel}>${yaml}</pre>
     `;
     return html`
       ${frontmatter}
-      <article @click=${this.#onClick}>${unsafeHTML(rendered)}</article>
+      <article @click=${this.#onClick}>${rendered}</article>
     `;
   }
 
   /**
-   * Opens `mdtp://` links in the Read tab and web links in a new tab, and
-   * keeps any other link from moving the page away.
+   * Opens web links in a new tab, lets links to other published documents
+   * move the Read tab, and keeps any other link from leaving the page.
    */
   #onClick(event: MouseEvent): void {
     const link = event.composedPath().find(
@@ -127,15 +125,21 @@ export class MarkdownViewElement extends LitElement {
         target instanceof HTMLAnchorElement,
     );
     const href = link?.getAttribute("href");
-    if (href === null || href === undefined) {
+    if (href === null || href === undefined || isReadHash(href)) {
       return;
     }
     event.preventDefault();
-    if (isMdtpLink(href)) {
-      const name = documentName(href);
-      globalThis.location.hash = routeHash({ tab: "read", name });
-    } else if (/^https?:/i.test(href)) {
+    if (/^https?:/i.test(href)) {
       globalThis.open(href, "_blank", "noopener,noreferrer");
     }
   }
+}
+
+/** Markdown rendered to HTML, sanitized, and parsed into inert nodes. */
+function renderMarkdown(markdown: string): DocumentFragment {
+  const clean = DOMPurify.sanitize(MARKED.parse(markdown, { async: false }));
+  const parsed = new DOMParser().parseFromString(clean, "text/html");
+  const fragment = document.createDocumentFragment();
+  fragment.append(...parsed.body.childNodes);
+  return fragment;
 }

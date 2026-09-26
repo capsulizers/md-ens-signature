@@ -131,9 +131,9 @@ export class RootElement extends LitElement {
       </header>
       <md-settings-row></md-settings-row>
       <wa-tab-group active=${this.#route.tab} @wa-tab-show=${this.#onTabShow}>
-        <wa-tab panel="sign">${TEXT.signTab}</wa-tab>
-        <wa-tab panel="read">${TEXT.readTab}</wa-tab>
-        <wa-tab-panel name="sign">
+        <wa-tab panel="SIGN">${TEXT.signTab}</wa-tab>
+        <wa-tab panel="READ">${TEXT.readTab}</wa-tab>
+        <wa-tab-panel name="SIGN">
           <div class="panels">
             <md-document-panel></md-document-panel>
             <div class="side">
@@ -142,7 +142,7 @@ export class RootElement extends LitElement {
             </div>
           </div>
         </wa-tab-panel>
-        <wa-tab-panel name="read">
+        <wa-tab-panel name="READ">
           <md-read-view .name=${this.#route.name}></md-read-view>
         </wa-tab-panel>
       </wa-tab-group>

@@ -15,11 +15,11 @@ import {
   type SettingsContext,
   settingsContext,
 } from "#context";
-import type { Publication } from "#engine";
+import type { Publication, Verdict } from "#engine";
 import {
   documentName,
   mdtpLink,
-  routeHash,
+  readHash,
   syncAfterSet,
   utcTime,
 } from "#utils";
@@ -34,11 +34,31 @@ declare global {
 }
 
 /** Where reading the current name stands. */
-type ReadState =
-  | { kind: "idle" }
-  | { kind: "reading" }
-  | { kind: "read"; publication: Publication }
-  | { kind: "unreachable" };
+type ReadState = IdleState | ReadingState | ReadDoneState | UnreachableState;
+
+/** No name has been asked for yet. */
+interface IdleState {
+  kind: "IDLE";
+}
+
+/** The name is being read from Sepolia. */
+interface ReadingState {
+  kind: "READING";
+}
+
+/** The name was read, whatever the verdict. */
+interface ReadDoneState {
+  kind: "READ";
+  publication: Publication;
+}
+
+/** The Sepolia node did not answer. */
+interface UnreachableState {
+  kind: "UNREACHABLE";
+}
+
+/** The signature verdict the badge shows when the node did not answer. */
+const UNREACHABLE: Verdict = { kind: "unreachable" };
 
 /** Reads a document published under an ENS name, with no wallet needed. */
 @customElement("md-read-view")
@@ -119,20 +139,23 @@ export class ReadViewElement extends LitElement {
   accessor #settings: SettingsContext = EMPTY_SETTINGS_CONTEXT;
 
   @state()
-  accessor #state: ReadState = { kind: "idle" };
+  accessor #state: ReadState = { kind: "IDLE" };
 
   /** Bumped per read, so an answer for an older name is dropped. */
   #request = 0;
 
   override render(): TemplateResult {
-    const example = routeHash({ tab: "read", name: EXAMPLE_DOCUMENT_NAME });
+    const value = this.name === "" ? "" : mdtpLink(this.name);
+    const exampleHref = readHash(EXAMPLE_DOCUMENT_NAME);
+    const exampleLink = mdtpLink(EXAMPLE_DOCUMENT_NAME);
+    const result = this.#renderState();
     return html`
       <form @submit=${this.#onSubmit}>
         <wa-input
           name="name"
           label=${TEXT.readLabel}
           placeholder=${TEXT.readPlaceholder}
-          .value=${this.name === "" ? "" : mdtpLink(this.name)}
+          .value=${value}
         ></wa-input>
         <wa-button type="submit" variant="brand">
           <wa-icon slot="start" name="search"></wa-icon>
@@ -141,31 +164,31 @@ export class ReadViewElement extends LitElement {
       </form>
       <div class="hint">
         ${TEXT.readHint} ${TEXT.readExample}
-        <a class="code" href=${example}>${mdtpLink(EXAMPLE_DOCUMENT_NAME)}</a>
+        <a class="code" href=${exampleHref}>${exampleLink}</a>
       </div>
-      ${this.#renderState()}
+      ${result}
     `;
   }
 
   #renderState(): TemplateResult {
     const state = this.#state;
     switch (state.kind) {
-      case "idle":
+      case "IDLE":
         return html``;
-      case "reading":
+      case "READING": {
+        const text = TEXT.reading(this.name);
         return html`
           <div class="status" role="status">
             <wa-spinner></wa-spinner>
-            ${TEXT.reading(this.name)}
+            ${text}
           </div>
         `;
-      case "unreachable":
+      }
+      case "UNREACHABLE":
         return html`
-          <md-verdict-badge .verdict=${{
-            kind: "unreachable",
-          }}></md-verdict-badge>
+          <md-verdict-badge .verdict=${UNREACHABLE}></md-verdict-badge>
         `;
-      case "read":
+      case "READ":
         return this.#renderPublication(state.publication);
     }
   }
@@ -174,9 +197,10 @@ export class ReadViewElement extends LitElement {
     const body = publication.markdown === "" ? html`` : html`
       <md-markdown-view .markdown=${publication.markdown}></md-markdown-view>
     `;
+    const facts = this.#renderFacts(publication);
     return html`
       <md-verdict-badge .publication=${publication}></md-verdict-badge>
-      ${this.#renderFacts(publication)} ${body}
+      ${facts} ${body}
     `;
   }
 
@@ -191,9 +215,10 @@ export class ReadViewElement extends LitElement {
       <dt>${TEXT.publisherLabel}</dt>
       <dd>${publisher}</dd>
     `;
+    const time = utcTime(timestamp);
     const when = timestamp === 0 ? html`` : html`
       <dt>${TEXT.publishedAtLabel}</dt>
-      <dd>${utcTime(timestamp)}</dd>
+      <dd>${time}</dd>
     `;
     return html`
       <dl>
@@ -224,17 +249,17 @@ export class ReadViewElement extends LitElement {
       this.#read();
       return;
     }
-    globalThis.location.hash = routeHash({ tab: "read", name });
+    globalThis.location.hash = readHash(name);
   }
 
   /** Reads the current name again, dropping any read still under way. */
   #read(): void {
     this.#request += 1;
     if (this.name === "") {
-      this.#state = { kind: "idle" };
+      this.#state = { kind: "IDLE" };
       return;
     }
-    this.#state = { kind: "reading" };
+    this.#state = { kind: "READING" };
     void this.#fetch(this.#request, this.name);
   }
 
@@ -247,7 +272,7 @@ export class ReadViewElement extends LitElement {
       return;
     }
     this.#state = publication === null
-      ? { kind: "unreachable" }
-      : { kind: "read", publication };
+      ? { kind: "UNREACHABLE" }
+      : { kind: "READ", publication };
   }
 }

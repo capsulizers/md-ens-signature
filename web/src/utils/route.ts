@@ -1,5 +1,5 @@
 /** The tabs the page has, named as their panels are. */
-export type Tab = "sign" | "read";
+export type Tab = "SIGN" | "READ";
 
 /** Where the page is: its tab and the published name being read. */
 export interface Route {
@@ -11,8 +11,8 @@ export interface Route {
 /** The scheme of links between published documents. */
 const MDTP_SCHEME = "mdtp://";
 
-/** The hash prefix of the Read tab, followed by the document name. */
-const READ_PREFIX = "#read/";
+/** The hash of the Read tab, followed by a slash and the document name. */
+const READ_HASH = "#read";
 
 /**
  * The document name in `mdtp://name.eth`, `name.eth`, or a hash route,
@@ -38,25 +38,33 @@ export function mdtpLink(name: string): string {
 
 /** Reads the route from a location hash such as `#read/name.eth`. */
 export function parseRoute(hash: string): Route {
-  if (hash.startsWith(READ_PREFIX)) {
-    const name = decodeURIComponent(hash.slice(READ_PREFIX.length));
-    return { tab: "read", name: documentName(name) };
+  if (hash.startsWith(`${READ_HASH}/`)) {
+    const name = decodeURIComponent(hash.slice(READ_HASH.length + 1));
+    return { tab: "READ", name: documentName(name) };
   }
-  if (hash === "#read") {
-    return { tab: "read", name: "" };
-  }
-  return { tab: "sign", name: "" };
+  const tab = hash.slice(1).toUpperCase();
+  return { tab: isTab(tab) ? tab : "SIGN", name: "" };
 }
 
 /** The location hash that shows `route`. */
 export function routeHash(route: Route): string {
-  if (route.tab === "sign") {
-    return "#sign";
-  }
-  return route.name === "" ? "#read" : `${READ_PREFIX}${route.name}`;
+  const hash = `#${route.tab.toLowerCase()}`;
+  return route.tab === "READ" && route.name !== ""
+    ? `${hash}/${route.name}`
+    : hash;
+}
+
+/** The location hash that reads the document published under `name`. */
+export function readHash(name: string): string {
+  return routeHash({ tab: "READ", name: documentName(name) });
+}
+
+/** Whether `href` is a hash that reads a published document. */
+export function isReadHash(href: string): boolean {
+  return href.startsWith(`${READ_HASH}/`);
 }
 
 /** Whether `tab` names one of the page's tabs. */
 export function isTab(tab: string): tab is Tab {
-  return tab === "sign" || tab === "read";
+  return tab === "SIGN" || tab === "READ";
 }

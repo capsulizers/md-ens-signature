@@ -1,9 +1,9 @@
 /** What reading a published document concluded about it. */
 export type PublishedVerdict =
-  | "notFound"
-  | "tampered"
-  | "unauthorized"
-  | "verified";
+  | "NOT_FOUND"
+  | "TAMPERED"
+  | "UNAUTHORIZED"
+  | "VERIFIED";
 
 /** A document read back from Sepolia through its name's `mdtp` record. */
 export interface Publication {

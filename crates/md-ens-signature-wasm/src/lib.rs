@@ -136,13 +136,13 @@ pub async fn verify(
 /// sending JSON-RPC to `rpcUrl` with `fetch`, and judges it.
 ///
 /// Resolves to `{ name, verdict, txHash?, publisher, from, markdown,
-/// timestamp }`, where `verdict` is `notFound`, `tampered`, `unauthorized`,
-/// or `verified` and `timestamp` is the block's Unix time in seconds. Rejects
+/// timestamp }`, where `verdict` is `NOT_FOUND`, `TAMPERED`, `UNAUTHORIZED`,
+/// or `VERIFIED` and `timestamp` is the block's Unix time in seconds. Rejects
 /// with a generic error when the node cannot be reached or the name is not
 /// a `.eth` name.
 #[wasm_bindgen(
   js_name = read,
-  unchecked_return_type = "{ name: string; verdict: \"notFound\" | \"tampered\" | \"unauthorized\" | \"verified\"; txHash?: string; publisher: string; from: string; markdown: string; timestamp: number }"
+  unchecked_return_type = "{ name: string; verdict: \"NOT_FOUND\" | \"TAMPERED\" | \"UNAUTHORIZED\" | \"VERIFIED\"; txHash?: string; publisher: string; from: string; markdown: string; timestamp: number }"
 )]
 pub async fn read(
   name: String,
@@ -153,10 +153,10 @@ pub async fn read(
     .await
     .map_err(|_| JsError::new("Could not read the name on Sepolia"))?;
   let verdict = match published.verdict {
-    PublishVerdict::NotFound => "notFound",
-    PublishVerdict::Tampered => "tampered",
-    PublishVerdict::Unauthorized => "unauthorized",
-    PublishVerdict::Verified => "verified",
+    PublishVerdict::NotFound => "NOT_FOUND",
+    PublishVerdict::Tampered => "TAMPERED",
+    PublishVerdict::Unauthorized => "UNAUTHORIZED",
+    PublishVerdict::Verified => "VERIFIED",
   };
   let object = Object::new();
   let mut fields: Vec<(&str, JsValue)> = vec![
