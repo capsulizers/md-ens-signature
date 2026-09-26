@@ -115,6 +115,15 @@ export const TEXT = {
   openInMemona: "Open in Memona",
   openInMemonaHint:
     "Opens the same document in the Memona app, version 2.0.0-alpha.44 or later, if it is installed.",
+  versionsTitle: "Versions",
+  versionsLoading: "Reading the versions from Sepolia",
+  versionsFailed: "Could not read the versions from Sepolia.",
+  versionCurrent: "Current",
+  versionMalformed: "Malformed record",
+  olderVersion: (time: string): string =>
+    `An older version, recorded ${time}. It is read-only; the name now points at a newer one.`,
+  olderVersionBack: "Back to the current version",
+  readingVersion: "Reading this version from Sepolia",
   publisherLabel: "Publisher",
   publishedAtLabel: "Published",
   transactionLabel: "Transaction",

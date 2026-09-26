@@ -24,6 +24,16 @@ export interface Publication {
   timestamp: number;
 }
 
+/** One setting of a document name's `mdtp` record: one version of it. */
+export interface Version {
+  /** The publishing transaction the record pointed at, or null if malformed. */
+  txHash: string | null;
+  /** The transaction that set the record. */
+  recordTxHash: string;
+  /** When the record was set, in Unix seconds (UTC). */
+  timestamp: number;
+}
+
 /** Whether an account may point a document name's `mdtp` record. */
 export type RecordAccess = "WRITABLE" | "NO_RESOLVER" | "DENIED";
 
@@ -39,6 +49,20 @@ export interface PublishEngine {
    * Sepolia node could not be asked.
    */
   read(name: string, rpcUrl: string): Promise<Publication | null>;
+  /**
+   * Every version of `name`, newest first, from the `TextChanged` logs of
+   * its resolver, or null when the Sepolia node could not be asked.
+   */
+  versions(name: string, rpcUrl: string): Promise<Version[] | null>;
+  /**
+   * Reads and judges the version of `name` published in `txHash`, by the
+   * same rule as the current one, or null when the node could not be asked.
+   */
+  readVersion(
+    name: string,
+    txHash: string,
+    rpcUrl: string,
+  ): Promise<Publication | null>;
   /**
    * Whether `publisher` may publish under `name`: the name itself, one of
    * its ancestors below `.eth`, or a subname of its parent.
