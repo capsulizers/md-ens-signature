@@ -120,6 +120,22 @@ from the page.
 | Bob grants `demo` to Mallory from the page | Bob `0x26FaCbA3f9A98b20e40f2B41c1e1236dAA75ceE5` | 11783266 | [0x593f854a…](https://sepolia.etherscan.io/tx/0x593f854ae532aea0387a55cd8b27ffb6b5aa3b1ff7349963b80fd12f270689ca) |
 | Bob revokes `demo` from the page | Bob | 11783268 | [0x524fee78…](https://sepolia.etherscan.io/tx/0x524fee781f5e23f49d129550b7a61aad9c314b04f42a07e1148fd4045e6738d1) |
 
+## Members' own resolvers
+
+So that a member can publish any name under their own subname, Alice gave
+`eric.mdsig91205.eth` and `tom.mdsig91205.eth` each a PermissionedResolver
+whose admin is the member. Eric's is `0x55539260bf4D016EBe603ceA08f79F64b3528FB4`,
+Tom's is `0xbFD6DdFc7aeFC301033B0Dd11c2c94084f1557A7`. Simulations (no
+transaction) showed each member's `setText` on `somefile.<member>.mdsig91205.eth`
+succeeding and Alice's reverting.
+
+| What | Sender | Block | Transaction |
+| --- | --- | --- | --- |
+| deploy eric's PermissionedResolver (admin 0xA2fD38B9FFbC6E3114670EFA6f6FB82976d31867) | Alice | 11787705 | [0x76ce8a7d…](https://sepolia.etherscan.io/tx/0x76ce8a7dd241e1888dff9e7ab16be752fe8c62121c0c18ef30711e78dcbbf803) |
+| point eric.mdsig91205.eth at 0x55539260bf4D016EBe603ceA08f79F64b3528FB4 | Alice | 11787706 | [0xc1b6386b…](https://sepolia.etherscan.io/tx/0xc1b6386b14af6f62d92f15ac47d85e84c23d106de425198ab32e9d4da83f47cb) |
+| deploy tom's PermissionedResolver (admin 0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c) | Alice | 11787707 | [0x8f7a3456…](https://sepolia.etherscan.io/tx/0x8f7a3456aa817788ced239aab98540a1cb03c43ae11d9f517528e3faa925e0c5) |
+| point tom.mdsig91205.eth at 0xbFD6DdFc7aeFC301033B0Dd11c2c94084f1557A7 | Alice | 11787708 | [0x48d12cd6…](https://sepolia.etherscan.io/tx/0x48d12cd6c55f018dfdc31e33e3521cf38d97b732290ac64596597a0a1d2a0bd3) |
+
 ## Simulations
 
 These were `eth_call` simulations at block 11783225. No transaction was sent.
