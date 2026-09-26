@@ -63,6 +63,17 @@ rerun: [0x66cbf595…](https://sepolia.etherscan.io/tx/0x66cbf595a7c2ae30a39bc84
 block 11783241, from Alice. Eric already held both roles, so it emitted no
 event and changed nothing.
 
+## Test team `mdsigteam6488.eth`
+
+Used only to test that a role holder, not the owner, can grant and revoke
+from the page.
+
+| What | Sender | Block | Transaction |
+| --- | --- | --- | --- |
+| Alice gives Bob ROLE_REGISTRAR and ROLE_UNREGISTER | Alice | 11783233 | [0xffc160d8…](https://sepolia.etherscan.io/tx/0xffc160d839f7f9d22e600dfd4da4674416ddfdfe87c1efe3369fbbb8fada29f1) |
+| Bob grants `demo` to Mallory from the page | Bob `0x26FaCbA3f9A98b20e40f2B41c1e1236dAA75ceE5` | 11783266 | [0x593f854a…](https://sepolia.etherscan.io/tx/0x593f854ae532aea0387a55cd8b27ffb6b5aa3b1ff7349963b80fd12f270689ca) |
+| Bob revokes `demo` from the page | Bob | 11783268 | [0x524fee78…](https://sepolia.etherscan.io/tx/0x524fee781f5e23f49d129550b7a61aad9c314b04f42a07e1148fd4045e6738d1) |
+
 ## Simulations
 
 These were `eth_call` simulations at block 11783225. No transaction was sent.
