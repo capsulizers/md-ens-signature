@@ -36,7 +36,7 @@ jobs:
       - run: deno install
       - run: deno task build
         env:
-          MDSIG_BASE: /md-ens-signature/
+          MDSIG_BASE: /mdtp/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web/dist
