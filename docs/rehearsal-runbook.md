@@ -25,8 +25,9 @@ are transactions, about 0.0002 SepoliaETH for one revoke plus re-grant.
    - Server address `http://127.0.0.1:8765/`
    - ENS name and signing key: leave empty (Helen only verifies)
    - Trusted parent `mdsig91205.eth`
-   - Allowed hosts `127.0.0.1` and `ethereum-sepolia-rpc.publicnode.com`,
-     Private network on
+   - Allowed hosts `127.0.0.1` and `ethereum-sepolia-rpc.publicnode.com`
+     (host names only, no port), Private network on
+   - Save, then press Reconnect if the connection shows Disconnected.
 4. Download the placeholder skills from `examples/demo/` in this repository:
    `SKILL-v1.md`, `SKILL-v2.md`, `SKILL-v3.md`.
 5. Check that Tom is a member: on the live page, Permissions shows
