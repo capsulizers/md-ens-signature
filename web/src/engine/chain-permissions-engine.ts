@@ -34,6 +34,7 @@ const UNIVERSAL_RESOLVER_ABI = parseAbi([
 const USER_REGISTRY_ABI = parseAbi([
   "function register(string label, address owner, address registry, address resolver, uint256 roleBitmap, uint64 expiry) returns (uint256)",
   "function unregister(uint256 anyId)",
+  "function hasRootRoles(uint256 roleBitmap, address account) view returns (bool)",
 ]);
 
 /** Emitted once, when a registry proxy is initialized. */
@@ -49,7 +50,7 @@ const LABEL_REGISTERED = parseAbiItem(
  * UserRegistry lists every label it ever registered in its logs, and
  * `findOwner` says who holds each one now, so nothing is kept locally.
  * Granting registers a label owned by the member with no roles, so only the
- * parent's owner can take it back.
+ * parent's owner, or an account it gave the unregister role, can take it back.
  */
 export class ChainPermissionsEngine implements PermissionsEngine {
   #clients: SepoliaClients;
@@ -81,6 +82,25 @@ export class ChainPermissionsEngine implements PermissionsEngine {
 
   owner(name: string, rpcUrl: string): Promise<Address | null> {
     return this.#owner(this.#clients.get(rpcUrl), name);
+  }
+
+  async hasRootRoles(
+    parentName: string,
+    roleBitmap: bigint,
+    account: Address,
+    rpcUrl: string,
+  ): Promise<boolean> {
+    const client = this.#clients.get(rpcUrl);
+    const registry = await this.#registry(client, parentName);
+    if (registry === null) {
+      return false;
+    }
+    return await client.readContract({
+      address: registry,
+      abi: USER_REGISTRY_ABI,
+      functionName: "hasRootRoles",
+      args: [roleBitmap, account],
+    });
   }
 
   async grant(

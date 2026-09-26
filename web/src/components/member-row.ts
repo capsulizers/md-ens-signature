@@ -73,7 +73,7 @@ export class MemberRowElement extends LitElement {
 
   /** Whether the connected wallet may revoke for the parent. */
   @property({ attribute: false })
-  accessor canManage: boolean = false;
+  accessor canRevoke: boolean = false;
 
   @consume({ context: enginesContext, subscribe: true })
   accessor #engines: Engines = EMPTY_ENGINES;
@@ -97,7 +97,7 @@ export class MemberRowElement extends LitElement {
     }
     const owner = this.#owner(member);
     const chip = this.#chip(member);
-    const isRevokeDisabled = !this.canManage || this.#isPending ||
+    const isRevokeDisabled = !this.canRevoke || this.#isPending ||
       member.status !== "GRANTED";
     return html`
       <div class="row">

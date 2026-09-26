@@ -52,12 +52,16 @@ export const TEXT = {
   viewTransaction: "View transaction on Etherscan",
   transactionFailed: "The transaction was cancelled or failed.",
   connectToManage: (parentName: string): string =>
-    `Connect the wallet that owns ${parentName} to grant or revoke.`,
+    `Connect the wallet that owns ${parentName}, or one holding roles on its registry, to grant or revoke.`,
   switchToManage: "Switch the wallet to Sepolia to grant or revoke.",
   parentUnowned: (parentName: string): string =>
     `${parentName} has no owner on Sepolia, so nobody can grant for it.`,
-  notParentOwner: (parentName: string, owner: string): string =>
-    `Only ${parentName}'s owner ${owner} can grant or revoke.`,
+  cannotGrantOrRevoke: (parentName: string, owner: string): string =>
+    `This wallet is not ${parentName}'s owner ${owner} and lacks ROLE_REGISTRAR and ROLE_UNREGISTER on its registry, so it cannot grant or revoke.`,
+  cannotGrant: (parentName: string): string =>
+    `This wallet lacks ROLE_REGISTRAR on ${parentName}'s registry, so it cannot grant.`,
+  cannotRevoke: (parentName: string): string =>
+    `This wallet lacks ROLE_UNREGISTER on ${parentName}'s registry, so it cannot revoke.`,
   loadingMembers: "Reading members from Sepolia",
   ownedBy: "Owned by",
   noOwner: "No owner; it cannot sign",
