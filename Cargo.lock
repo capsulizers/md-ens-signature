@@ -1090,6 +1090,7 @@ dependencies = [
  "alloy-sol-types",
  "anyhow",
  "k256",
+ "serde_json",
  "sha2",
 ]
 
