@@ -32,7 +32,7 @@ both.
      (host names only, no port), Private network on
    - Save, then press Reconnect if the connection shows Disconnected.
 4. Helen's own workspace folder (local, not the shared folder) holds
-   `demo-data/tokens.tsv`, an empty `outputs/`, and the agent rule file that
+   `tokens.tsv`, an empty `outputs/`, and the agent rule file that
    makes the agent stop on anything but Verified. See "Verdict gate" below.
 5. From `examples/demo/` in this repository: `SKILL-v1.md`, `SKILL-v2.md`,
    `SKILL-v3.md` and `tokens.tsv`.
@@ -47,9 +47,8 @@ only when that line starts with `Verified:`, and otherwise to stop and tell
 Helen the verdict. The rule lives in Helen's own folder, so whoever edits the
 shared skill cannot remove it.
 
-Agent prompt for every scene: "Screen demo-data/tokens.tsv with the
-token-screener skill from the Team skills connection and write the report to
-outputs/."
+Agent prompt for every scene: "Screen tokens.tsv with the token-screener
+skill from the Team skills connection and write outputs/report.md."
 
 ## The five scenes
 
