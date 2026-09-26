@@ -6,62 +6,88 @@ For the 17:00 rehearsal. Sepolia (chain 11155111). Parent name `mdsig91205.eth`.
 | --- | --- | --- | --- |
 | Eric | team admin, owns `eric.mdsig91205.eth`, may add and revoke members | `0xA2fD38B9FFbC6E3114670EFA6f6FB82976d31867` | [live page](https://capsulizers.github.io/md-ens-signature/) + MetaMask |
 | Tom | member, owns `tom.mdsig91205.eth` | `0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c` | live page + MetaMask |
-| Helen | Memona user, no wallet | none | Memona + Signature plugin |
+| Helen | Memona user, no wallet | none | Memona, the Signature plugin and the Folder Agent |
 
-Signing is free (an off-chain wallet signature). Only Eric's grant and revoke
-are transactions, about 0.0002 SepoliaETH for one revoke plus re-grant.
+Signing is free: it is an off-chain wallet signature, not a transaction. Only
+Eric's revoke and re-register are transactions, about 0.0002 SepoliaETH for
+both.
 
 ## Before the rehearsal
 
 1. Presenter laptop: Chrome with MetaMask holding the Eric and Tom accounts,
    network Sepolia. The team imports its own keys; nobody else needs them.
-2. A local WebDAV folder for Helen, for example with
+2. The shared WebDAV folder, for example with
    [rclone](https://rclone.org/downloads/):
-   `rclone serve webdav C:\demo-dav --addr 127.0.0.1:8765`.
-   Set Chrome's download folder to `C:\demo-dav`, and turn on "Ask where to
-   save each file" so each download can be named `SKILL.md`.
-3. Memona: Plugins > Browse > Signature > Install (version 0.1.1 or newer).
-   Then Connections > Add connection > Signed WebDAV:
+   `rclone serve webdav C:\demo-dav --addr 127.0.0.1:8765`. Create
+   `C:\demo-dav\token-screener\`. The skill Helen's agent uses is always
+   `token-screener/SKILL.md` in it. In Chrome, turn on "Ask where to save each
+   file" so each signed download can be saved there under that name.
+3. Memona, alpha.43 or newer: Plugins > Browse > Signature > Install (0.1.1 or
+   newer). Then Connections > Add connection > Signed WebDAV, named
+   `Team skills`:
    - Server address `http://127.0.0.1:8765/`
    - ENS name and signing key: leave empty (Helen only verifies)
    - Trusted parent `mdsig91205.eth`
    - Allowed hosts `127.0.0.1` and `ethereum-sepolia-rpc.publicnode.com`
      (host names only, no port), Private network on
    - Save, then press Reconnect if the connection shows Disconnected.
-4. Download the placeholder skills from `examples/demo/` in this repository:
-   `SKILL-v1.md`, `SKILL-v2.md`, `SKILL-v3.md`.
-5. Check that Tom is a member: on the live page, Permissions shows
-   `tom.mdsig91205.eth` as Granted. If not, do "Reset" below.
+4. Helen's own workspace folder (local, not the shared folder) holds
+   `demo-data/tokens.tsv`, an empty `outputs/`, and the agent rule file that
+   makes the agent stop on anything but Verified. See "Verdict gate" below.
+5. From `examples/demo/` in this repository: `SKILL-v1.md`, `SKILL-v2.md`,
+   `SKILL-v3.md` and `tokens.tsv`.
+6. Check on the live page that Permissions shows `eric` and `tom` as Granted.
 
-## The four scenes
+## Verdict gate
 
-Memona caches each verdict for 30 seconds; a new file is checked at once.
+The plugin writes a line `ens-verification: "…"` into every Markdown file it
+serves, to Memona's editor and to the Folder Agent alike, and replaces any such
+line a file stores itself. Helen's workspace rule tells the agent to continue
+only when that line starts with `Verified:`, and otherwise to stop and tell
+Helen the verdict. The rule lives in Helen's own folder, so whoever edits the
+shared skill cannot remove it.
 
-1. **Eric signs v1.** MetaMask: Eric. Live page > Open file > `SKILL-v1.md`.
-   Sign as `eric.mdsig91205.eth` > Sign with wallet > approve in MetaMask. The
-   page shows Verified. Download signed file > save as `SKILL.md`.
-   Helen opens `SKILL.md` in Memona: `ens-verification: Verified:
-   eric.mdsig91205.eth`.
+Agent prompt for every scene: "Screen demo-data/tokens.tsv with the
+token-screener skill from the Team skills connection and write the report to
+outputs/."
+
+## The five scenes
+
+Memona caches each verdict for 30 seconds; a changed file is checked at once.
+After a revoke, wait 30 seconds before Helen runs again.
+
+1. **Eric signs v1.** MetaMask: Eric. Live page > Open file > `SKILL-v1.md`,
+   Sign as `eric.mdsig91205.eth` > Sign with wallet. The page shows Verified.
+   Download signed file > save as `token-screener/SKILL.md`. Helen runs the
+   agent: 5 candidates, NOVA, RUGY, KITE, LUMA, MOSS.
 2. **Tom signs v2 (adds RUGY).** MetaMask: Tom. Open `SKILL-v2.md`, sign as
-   `tom.mdsig91205.eth`, download over `SKILL.md`, and also keep a copy as
-   `SKILL-v2-signed.md` outside the folder. Helen reopens: `Verified:
-   tom.mdsig91205.eth`.
-3. **One character changes.** Helen changes one character of the body in
-   Memona (for example `5000000` to `5000001`) and saves. The badge turns
-   `Tampered: signed as tom.mdsig91205.eth`. Put `SKILL-v2-signed.md` back as
-   `SKILL.md` afterwards.
-4. **Eric revokes Tom, Tom signs v3.** MetaMask: Eric. Permissions > row
-   `tom.mdsig91205.eth` > Revoke > confirm; wait for Revoked (about 15 s).
-   MetaMask: Tom. Open `SKILL-v3.md`, sign as `tom.mdsig91205.eth`: the page
-   already shows Unauthorized. Download over `SKILL.md`. Helen reopens:
-   `Unauthorized: tom.mdsig91205.eth is not registered`.
-
-Say this in scene 4: revoking Tom also turns his earlier v2 Unauthorized.
-Verification asks who owns the name now, so Tom's old signatures lose their
-standing with his membership. Eric's v1 stays Verified.
+   `tom.mdsig91205.eth`, save over `token-screener/SKILL.md`, and keep a copy
+   outside the folder as `SKILL-v2-tom.md`. Helen runs: 4 candidates, NOVA,
+   KITE, LUMA, MOSS.
+3. **Someone edits the shared file.** Open `C:\demo-dav\token-screener\SKILL.md`
+   in Notepad, delete the RUGY row, save. Helen runs: the badge reads
+   `Tampered: signed as tom.mdsig91205.eth`, and the agent stops and alerts
+   her. Put `SKILL-v2-tom.md` back as `token-screener/SKILL.md`.
+4. **Tom signs v3 by mistake, Eric revokes Tom.** MetaMask: Tom. Open
+   `SKILL-v3.md` (the RUGY row deleted), sign as `tom.mdsig91205.eth`, save
+   over `token-screener/SKILL.md`, and keep a copy as `SKILL-v3-tom.md`.
+   Eric opens that file on the live page, sees RUGY missing, switches MetaMask
+   to Eric, and in Permissions clicks Revoke on `tom.mdsig91205.eth`; wait for
+   Revoked. Helen runs: `Unauthorized: tom.mdsig91205.eth is not registered`,
+   and the agent stops and alerts her. Put `SKILL-v2-tom.md` back: it is
+   Unauthorized too, because verification asks who owns the name now.
+5. **Eric re-signs v2.** MetaMask: Eric. Open `SKILL-v2-tom.md` on the live
+   page, change Sign as to `eric.mdsig91205.eth`, Sign with wallet, save over
+   `token-screener/SKILL.md`. Helen runs: Verified, 4 candidates again.
 
 ## Reset
 
-MetaMask: Eric. Permissions > Member label `tom`, Member address
-`0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c` > Grant. Tom's v2 is Verified
-again. Never revoke `bob.mdsig91205.eth`; the README demo uses it.
+1. MetaMask: Eric. Permissions > Member label `tom`, Member address
+   `0x81BcC20cEdB2Fb1Ac91cdd9288930Cb7DC481d7c` > Grant. Wait for Granted.
+2. Put Eric's signed v1 back as `token-screener/SKILL.md`, or leave the shared
+   file for scene 1 to overwrite.
+3. Empty Helen's `outputs/`.
+
+Signed files from an earlier run stay valid while their signer is a member, so
+re-signing is only needed for files whose signer was revoked. Never revoke
+`bob.mdsig91205.eth`; the README demo uses it.
