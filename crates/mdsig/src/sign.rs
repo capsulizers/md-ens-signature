@@ -53,7 +53,7 @@ pub fn run(args: &Args) -> anyhow::Result<ExitCode> {
 }
 
 /// Reads a 32-byte hex private key from an environment variable.
-fn private_key(var: &str) -> anyhow::Result<[u8; 32]> {
+pub fn private_key(var: &str) -> anyhow::Result<[u8; 32]> {
   let value = std::env::var(var)
     .with_context(|| format!("Set {var} to a 0x hex private key"))?;
   hex::decode_to_array(value.trim())
