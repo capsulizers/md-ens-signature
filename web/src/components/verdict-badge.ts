@@ -3,7 +3,7 @@ import { css, html, LitElement, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { TEXT } from "#constants";
-import type { Verdict } from "#engine";
+import type { Publication, Verdict } from "#engine";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -19,7 +19,10 @@ interface BadgeLook {
   detail: string;
 }
 
-/** Shows what verifying the file concluded, large enough to read at once. */
+/**
+ * Shows what verifying a signed file or reading a published one concluded,
+ * large enough to read at once.
+ */
 @customElement("md-verdict-badge")
 export class VerdictBadgeElement extends LitElement {
   static override styles = css`
@@ -83,6 +86,10 @@ export class VerdictBadgeElement extends LitElement {
   @property({ attribute: false })
   accessor verdict: Verdict | null = null;
 
+  /** A published document to judge instead of the signature verdict. */
+  @property({ attribute: false })
+  accessor publication: Publication | null = null;
+
   override render(): TemplateResult {
     const look = this.#look();
     return html`
@@ -97,6 +104,9 @@ export class VerdictBadgeElement extends LitElement {
   }
 
   #look(): BadgeLook {
+    if (this.publication !== null) {
+      return this.#publicationLook(this.publication);
+    }
     const verdict = this.verdict;
     switch (verdict?.kind) {
       case undefined:
@@ -140,6 +150,39 @@ export class VerdictBadgeElement extends LitElement {
           icon: "question-diamond",
           title: TEXT.unreachable,
           detail: TEXT.unreachableDetail,
+        };
+    }
+  }
+  #publicationLook(publication: Publication): BadgeLook {
+    const { name, publisher } = publication;
+    switch (publication.verdict) {
+      case "verified":
+        return {
+          tone: "success",
+          icon: "patch-check-fill",
+          title: TEXT.verified,
+          detail: TEXT.publishedDetail(publisher),
+        };
+      case "unauthorized":
+        return {
+          tone: "warning",
+          icon: "shield-exclamation",
+          title: TEXT.unauthorized,
+          detail: TEXT.publishedUnauthorizedDetail(publisher, name),
+        };
+      case "tampered":
+        return {
+          tone: "danger",
+          icon: "x-octagon-fill",
+          title: TEXT.tampered,
+          detail: TEXT.publishedTamperedDetail,
+        };
+      case "notFound":
+        return {
+          tone: "neutral",
+          icon: "file-earmark",
+          title: TEXT.notFound,
+          detail: TEXT.notFoundDetail(name),
         };
     }
   }

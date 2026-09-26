@@ -1,9 +1,10 @@
 import "@awesome.me/webawesome/dist/components/tab-group/tab-group.js";
 import "@awesome.me/webawesome/dist/components/tab-panel/tab-panel.js";
 import "@awesome.me/webawesome/dist/components/tab/tab.js";
+import type { WaTabShowEvent } from "@awesome.me/webawesome/dist/events/tab-show.js";
 import { provide } from "@lit/context";
 import { css, html, LitElement, type TemplateResult } from "lit";
-import { customElement } from "lit/decorators.js";
+import { customElement, state } from "lit/decorators.js";
 
 import { TEXT } from "#constants";
 import {
@@ -19,9 +20,12 @@ import {
   walletContext,
 } from "#context";
 import { hasWallet, switchToSepolia, type WalletState } from "#engine";
+import { isTab, parseRoute, type Route, routeHash } from "#utils";
 
 import "./document-panel.ts";
 import "./permissions-panel.ts";
+import "./read-view.ts";
+import { RouteController } from "./route-controller.ts";
 import "./settings-row.ts";
 import "./team-wizard.ts";
 import "./wallet-button.ts";
@@ -102,6 +106,11 @@ export class RootElement extends LitElement {
 
   #walletController = new WalletController(this);
 
+  #routeController = new RouteController(this);
+
+  @state()
+  accessor #route: Route = this.#listenToRoute();
+
   @provide({ context: walletContext })
   accessor #wallet: WalletContext = this.#listenToWallet();
 
@@ -121,8 +130,9 @@ export class RootElement extends LitElement {
         <md-wallet-button></md-wallet-button>
       </header>
       <md-settings-row></md-settings-row>
-      <wa-tab-group>
+      <wa-tab-group active=${this.#route.tab} @wa-tab-show=${this.#onTabShow}>
         <wa-tab panel="sign">${TEXT.signTab}</wa-tab>
+        <wa-tab panel="read">${TEXT.readTab}</wa-tab>
         <wa-tab-panel name="sign">
           <div class="panels">
             <md-document-panel></md-document-panel>
@@ -132,8 +142,32 @@ export class RootElement extends LitElement {
             </div>
           </div>
         </wa-tab-panel>
+        <wa-tab-panel name="read">
+          <md-read-view .name=${this.#route.name}></md-read-view>
+        </wa-tab-panel>
       </wa-tab-group>
     `;
+  }
+
+  /** Follows the location hash, starting from the one the page opened at. */
+  #listenToRoute(): Route {
+    this.#routeController.listen((route: Route): void => {
+      this.#route = route;
+    });
+    return parseRoute(globalThis.location.hash);
+  }
+
+  /**
+   * Records a tab picked by hand in the hash without a history entry, so the
+   * link can be shared while back and forward still step between documents.
+   */
+  #onTabShow(event: WaTabShowEvent): void {
+    const tab = event.detail.name;
+    if (!isTab(tab) || tab === this.#route.tab) {
+      return;
+    }
+    this.#route = { ...this.#route, tab };
+    globalThis.history.replaceState(null, "", routeHash(this.#route));
   }
 
   /** Rebuilds the wallet context on every change, starting disconnected. */

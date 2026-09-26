@@ -1119,6 +1119,7 @@ dependencies = [
  "anyhow",
  "js-sys",
  "md-ens-signature",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

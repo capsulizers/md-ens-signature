@@ -9,8 +9,10 @@ use anyhow::{anyhow, bail};
 use js_sys::{Object, Promise, Reflect};
 use md_ens_signature::document::{self, SignatureFields};
 use md_ens_signature::ens::EthCall;
+use md_ens_signature::publish::{self, JsonRpc, PublishVerdict};
 use md_ens_signature::signature;
 use md_ens_signature::verify::{self, EthCaller, Verdict};
+use serde_json::{Value, json};
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::{JsError, JsValue, wasm_bindgen};
 use wasm_bindgen_futures::JsFuture;
@@ -130,6 +132,52 @@ pub async fn verify(
   Ok(object.into())
 }
 
+/// Reads the document published under `name` from its `mdtp` text record,
+/// sending JSON-RPC to `rpcUrl` with `fetch`, and judges it.
+///
+/// Resolves to `{ name, verdict, txHash?, publisher, from, markdown,
+/// timestamp }`, where `verdict` is `notFound`, `tampered`, `unauthorized`,
+/// or `verified` and `timestamp` is the block's Unix time in seconds. Rejects
+/// with a generic error when the node cannot be reached or the name is not
+/// a `.eth` name.
+#[wasm_bindgen(
+  js_name = read,
+  unchecked_return_type = "{ name: string; verdict: \"notFound\" | \"tampered\" | \"unauthorized\" | \"verified\"; txHash?: string; publisher: string; from: string; markdown: string; timestamp: number }"
+)]
+pub async fn read(
+  name: String,
+  #[wasm_bindgen(js_name = rpcUrl)] rpc_url: String,
+) -> Result<JsValue, JsError> {
+  let caller = FetchCaller { url: rpc_url };
+  let published = publish::read(&name, &caller)
+    .await
+    .map_err(|_| JsError::new("Could not read the name on Sepolia"))?;
+  let verdict = match published.verdict {
+    PublishVerdict::NotFound => "notFound",
+    PublishVerdict::Tampered => "tampered",
+    PublishVerdict::Unauthorized => "unauthorized",
+    PublishVerdict::Verified => "verified",
+  };
+  let object = Object::new();
+  let mut fields: Vec<(&str, JsValue)> = vec![
+    ("name", published.name.into()),
+    ("verdict", verdict.into()),
+    ("publisher", published.publisher.into()),
+    ("from", published.from.to_checksum(None).into()),
+    ("markdown", published.markdown.into()),
+    // Block timestamps fit a JavaScript number for millions of years.
+    ("timestamp", (published.timestamp as f64).into()),
+  ];
+  if let Some(tx_hash) = published.tx_hash {
+    fields.push(("txHash", tx_hash.to_string().into()));
+  }
+  for (key, value) in fields {
+    Reflect::set(&object, &key.into(), &value)
+      .map_err(|_| JsError::new("Failed to build the document"))?;
+  }
+  Ok(object.into())
+}
+
 #[wasm_bindgen]
 extern "C" {
   /// The global `fetch`, present in browsers, workers, and Deno alike.
@@ -137,22 +185,32 @@ extern "C" {
   fn global_fetch(request: &Request) -> Promise;
 }
 
-/// Sends `eth_call` as JSON-RPC over the global `fetch`.
+/// Sends JSON-RPC requests over the global `fetch`.
 struct FetchCaller {
   url: String,
 }
 
 impl EthCaller for FetchCaller {
   async fn call(&self, call: &EthCall) -> anyhow::Result<Vec<u8>> {
-    let body = format!(
-      "{{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_call\",\"params\":\
-       [{{\"to\":\"{}\",\"data\":\"{}\"}},\"latest\"]}}",
-      call.to,
-      hex::encode_prefixed(&call.data),
-    );
+    publish::eth_call(self, call).await
+  }
+}
+
+impl JsonRpc for FetchCaller {
+  async fn request(
+    &self,
+    method: &str,
+    params: Value,
+  ) -> anyhow::Result<Value> {
+    let body = json!({
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": method,
+      "params": params,
+    });
     let init = RequestInit::new();
     init.set_method("POST");
-    init.set_body(&body.into());
+    init.set_body(&body.to_string().into());
     let request = Request::new_with_str_and_init(&self.url, &init)
       .map_err(|_| anyhow!("Invalid RPC URL"))?;
     request
@@ -167,14 +225,20 @@ impl EthCaller for FetchCaller {
     if !response.ok() {
       bail!("The node answered with HTTP {}", response.status());
     }
-    let json = response.json().map_err(|_| anyhow!("No JSON body"))?;
-    let json = JsFuture::from(json)
+    let text = response.text().map_err(|_| anyhow!("No body"))?;
+    let text = JsFuture::from(text)
       .await
+      .map_err(|_| anyhow!("The node's answer is unreadable"))?
+      .as_string()
+      .ok_or_else(|| anyhow!("The node's answer is not text"))?;
+    let mut answer: Value = serde_json::from_str(&text)
       .map_err(|_| anyhow!("The node's answer is not JSON"))?;
-    let result = Reflect::get(&json, &"result".into())
-      .ok()
-      .and_then(|result| result.as_string())
-      .ok_or_else(|| anyhow!("The node's answer has no result"))?;
-    hex::decode(result).map_err(|_| anyhow!("The node's result is not hex"))
+    if answer.get("error").is_some() {
+      bail!("The node answered with an error");
+    }
+    answer
+      .get_mut("result")
+      .map(Value::take)
+      .ok_or_else(|| anyhow!("The node's answer has no result"))
   }
 }

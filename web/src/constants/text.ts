@@ -5,6 +5,7 @@ export const TEXT = {
   subtitle:
     "An ENS name decides who may write. Sign a file to catch any forgery, or publish it to Sepolia where nobody can forge or delete it.",
   signTab: "Sign",
+  readTab: "Read",
   connectWallet: "Connect wallet",
   switchToSepolia: "Switch to Sepolia",
   walletFailed: "The wallet request was cancelled or failed.",
@@ -94,4 +95,23 @@ export const TEXT = {
     "A step was cancelled or failed. Check the name again and start over.",
   teamCreated: (name: string): string =>
     `${name} is yours. The page now shows its members.`,
+  readLabel: "Published name",
+  readPlaceholder: "mdtp://skills.mdsig91205.eth",
+  readHint:
+    "Reading needs no wallet: the name's mdtp record points at the transaction that holds the file.",
+  read: "Read",
+  readExample: "Try",
+  reading: (name: string): string => `Reading ${name} from Sepolia`,
+  notFound: "Not found",
+  notFoundDetail: (name: string): string =>
+    `${name} has no published document.`,
+  publishedDetail: (publisher: string): string => `Published by ${publisher}`,
+  publishedTamperedDetail:
+    "The record or its transaction is not an MDTP document.",
+  publishedUnauthorizedDetail: (publisher: string, name: string): string =>
+    `${publisher} may not publish ${name} now.`,
+  publisherLabel: "Publisher",
+  publishedAtLabel: "Published",
+  transactionLabel: "Transaction",
+  frontmatterLabel: "Frontmatter",
 };
